@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdint>
 #include <fstream>
+#include <iomanip>
 
 struct Node {
     int32_t value;
@@ -14,16 +15,19 @@ class Tree
 {
 private:
     Node* root;
-    int32_t count = 0;
+    int32_t count;
 
     Node* InsertNode(Node* node, int32_t x);
     bool SearchNode(Node* node, int32_t x);
     void SearchXMinNode(Node* node, int32_t* min, int32_t& ammount);
     void DeleteNode(Node* node);
+    void PrintNode(Node* node, int padding);
 public:
-    Tree(const char* fileName);
+    Tree();
     ~Tree();
+    void InitializeFromFile(const char* fileName); 
     bool Insert(int32_t x);
     bool Search(int32_t x);
     int* SearchXMin(int32_t ammount);
+    void Print();
 };

@@ -1,6 +1,8 @@
 #include "tree.h"
 
-Tree::Tree(const char* fileName) {
+Tree::Tree() : root(nullptr), count(0) {};
+
+void Tree::InitializeFromFile(const char* fileName) {
     std::ifstream file(fileName, std::ios::binary);
     if (!file) {
         std::cerr << "Can not open file: " << fileName << std::endl;
@@ -9,10 +11,12 @@ Tree::Tree(const char* fileName) {
 
     int32_t size;
     file.read(reinterpret_cast<char*>(&size), sizeof(int32_t));
+    std::cout << "size: " <<size << std::endl;
 
     for(int32_t i = 0; i < size; i++) {
         int32_t x;
         file.read(reinterpret_cast<char*>(&x), sizeof(int32_t));
+        std::cout << x << " ";
         
         if(!Insert(x)) {
             std::cerr << "Can not insert element: " << x << std::endl;
@@ -106,4 +110,17 @@ int* Tree::SearchXMin(int32_t ammount) {
 
     SearchXMinNode(root, min, ammount);
     return min;
+}
+
+void Tree::PrintNode(Node* node, int padding) {
+    if (node) {
+        PrintNode(node->right, padding + 1);
+        for (int i = 0; i < padding; i++)  std::cout << "  ";
+        std::cout << node->value << std::endl;
+        PrintNode(node->left, padding + 1);
+    }
+}
+
+void Tree::Print() {
+    PrintNode(root, 0);
 }
