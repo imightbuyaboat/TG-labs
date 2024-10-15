@@ -6,6 +6,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstdlib>
+#include <ctime> 
 #include "graph.h"
 
 char* outputFileName = "default.txt";
@@ -16,9 +18,13 @@ void createGraph(const int16_t size, const char* fileName) {
 
     file.write(reinterpret_cast<const char*>(&size), sizeof(int16_t));
 
+    srand(static_cast<unsigned int>(time(0)));
     for (int16_t i = 0; i < size; i++) {
         for (int16_t j = 0; j < size; j++) {
-            int16_t value = rand() % (2 * INT16_MAX + 1) - INT16_MAX;
+            //int16_t value = rand() % (2 * INT16_MAX + 1) - INT16_MAX;
+            //int16_t value = rand() % (2 * 20 + 1) - 20;
+
+            int16_t value = rand() % 21;
             file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
         }
     }

@@ -2,8 +2,9 @@
 #include <cstdint>
 #include <iostream>
 #include <fstream>
-#include <vector>
+//#include <vector>
 #include <queue>
+#include <iomanip>
 
 #define vertexPair std::pair<int16_t, int16_t>
 
@@ -23,7 +24,9 @@ public:
 
     int16_t* BellmanFord(const int16_t src);
 
-    void Dijkstra(const int16_t src, std::vector<int16_t>& distance, std::vector<int16_t>& previous);
+    void Dijkstra(const int16_t src, int16_t* distance, int16_t* previous);
 
     int16_t** Johnson(const char* fileName);
+
+    void Print();
 };

@@ -10,7 +10,7 @@ Graph::Graph(const char* fileName, const bool addNewVertex) {
     file.read(reinterpret_cast<char*>(&size), sizeof(int16_t));
 
     if(addNewVertex) size++;
-    std::cout << "Size of matrix: " << size << " x " << size << std::endl;
+    else std::cout << "Size of matrix: " << size << " x " << size << std::endl;
 
     correspondenceMatrix = new int16_t*[size];
     for(size_t i = 0; i < size; i++) {
@@ -25,6 +25,12 @@ Graph::Graph(const char* fileName, const bool addNewVertex) {
             else file.read(reinterpret_cast<char*>(&correspondenceMatrix[i][j]), sizeof(int16_t));
         }
     }
+
+    if(addNewVertex) {
+        for(size_t i = 0; i < size; i++) correspondenceMatrix[size - 1][i] = 0;
+    }
+
+    Print();
 
     file.close();
 }
@@ -46,11 +52,20 @@ int16_t* Graph::BellmanFord(const int16_t src) {
     std::set<vertexPair> vertexPairs;
     for(size_t i = 0; i < size; i++) {
         for(size_t j = 0; j < size; j++) {
-            if(correspondenceMatrix[i][j] != INT16_MAX) {
+            if(correspondenceMatrix[i][j] != INT16_MAX && i != j) {
                 vertexPairs.insert({i, j});
             }
         }
     }
+
+    for(vertexPair pair : vertexPairs) {
+        std::cout << "[" << pair.first << "; " << pair.second << "]  ";
+    }
+    std::cout << std::endl;
+    for(vertexPair pair : vertexPairs) {
+        std::cout << std::setw(8) << correspondenceMatrix[pair.first][pair.second];
+    }
+    std::cout << std::endl << std::endl;
 
     for(size_t i = 0; i < size - 1; i++) {
         for(vertexPair pair : vertexPairs) {
@@ -58,7 +73,11 @@ int16_t* Graph::BellmanFord(const int16_t src) {
                 dist[pair.second] = dist[pair.first] + correspondenceMatrix[pair.first][pair.second];
             }
         }
+
+        for(size_t i = 0; i < size; i++) std::cout << std::setw(3) << dist[i];
+        std::cout << std::endl;
     }
+    std::cout << std::endl;
 
     bool negativeCycle = false;
     for(vertexPair pair : vertexPairs) {
@@ -72,9 +91,9 @@ int16_t* Graph::BellmanFord(const int16_t src) {
     return dist;
 }
 
-void Graph::Dijkstra(const int16_t src, std::vector<int16_t>& distance, std::vector<int16_t>& previous) {
-    distance.assign(size, INT16_MAX);
-    previous.assign(size, -1);
+void Graph::Dijkstra(const int16_t src, int16_t* distance, int16_t* previous) {
+    for(size_t i = 0; i < size; i++) distance[i] = INT16_MAX;
+    for(size_t i = 0; i < size; i++) previous[i] = -1;
     distance[src] = 0;
 
     std::priority_queue<vertexPair, std::vector<vertexPair>, std::greater<vertexPair>> pq;
@@ -110,11 +129,12 @@ int16_t** Graph::Johnson(const char* fileName) {
             }
         }
     }
+    expandedGraph.Print();
 
     int16_t** allPairsShortestPaths = new int16_t*[size];
     for (size_t i = 0; i < size; i++) {
-        std::vector<int16_t> distance(size);
-        std::vector<int16_t> previous(size);
+        int16_t* distance = new int16_t[size];
+        int16_t* previous = new int16_t[size];
         expandedGraph.Dijkstra(i, distance, previous);
 
         allPairsShortestPaths[i] = new int16_t[size];
@@ -127,6 +147,24 @@ int16_t** Graph::Johnson(const char* fileName) {
         }
     }
 
+    for(size_t i = 0; i < size; i++) {
+        for(size_t j = 0; j < size; j++) {
+            std::cout << std::setw(6) << allPairsShortestPaths[i][j];
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+
     delete[] h;
     return allPairsShortestPaths;
+}
+
+void Graph::Print() {
+    for(size_t i = 0; i < size; i++) {
+        for(size_t j = 0; j < size; j++) {
+            std::cout << std::setw(6) << correspondenceMatrix[i][j];
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
 }

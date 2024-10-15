@@ -99,6 +99,8 @@ int main(const int argc, const char* argv[]) {
                     if (i != MIN_ELEMENTS_COUNT - 1) std::cout << ", ";
                 }
                 std::cout << "]\n";
+
+                delete[] min;
             }
             break;
         }
