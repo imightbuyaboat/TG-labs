@@ -23,34 +23,35 @@ void Tree::InitializeFromFile(const char* fileName) {
             exit(1);
         }
     }
+    std::cout << std::endl << std::endl;
 
     file.close();
 }
 
 Tree::~Tree() {
-    DeleteNode(root);
+    deleteNode(root);
 }
 
-void Tree::DeleteNode(Node* node) {
+void Tree::deleteNode(Node* node) {
     if(!node) return;
 
-    DeleteNode(node->left);
-    DeleteNode(node->right);
+    deleteNode(node->left);
+    deleteNode(node->right);
 
     delete node;
 }
 
-Node* Tree::InsertNode(Node* node, int32_t x) {
+Node* Tree::insertNode(Node* node, int32_t x) {
     if(!node) {
         count++;
         return new Node(x);
     }
 
     if(x < node->value) {
-        node->left = InsertNode(node->left, x);
+        node->left = insertNode(node->left, x);
     }
     else if(x > node->value) {
-        node->right = InsertNode(node->right, x);
+        node->right = insertNode(node->right, x);
     }
     else {
         return node;
@@ -60,11 +61,11 @@ Node* Tree::InsertNode(Node* node, int32_t x) {
 }
 
 bool Tree::Insert(int32_t x) {
-    root = InsertNode(root, x);
+    root = insertNode(root, x);
     return root != nullptr;
 }
 
-bool Tree::SearchNode(Node* node, int32_t x) {
+bool Tree::searchNode(Node* node, int32_t x) {
     if(!node) return false;
 
     if(node->value == x) {
@@ -72,21 +73,21 @@ bool Tree::SearchNode(Node* node, int32_t x) {
     }
 
     if(x < node->value) {
-        return SearchNode(node->left, x);
+        return searchNode(node->left, x);
     }
     else {
-        return SearchNode(node->right, x);
+        return searchNode(node->right, x);
     }
 }
 
 bool Tree::Search(int32_t x) {
-    return SearchNode(root, x);
+    return searchNode(root, x);
 }
 
-void Tree::SearchXMinNode(Node* node, int32_t* min, int32_t& ammount) {
+void Tree::searchXMinNode(Node* node, int32_t* min, int32_t& ammount) {
     if(!node) return;
 
-    SearchXMinNode(node->left, min, ammount);
+    searchXMinNode(node->left, min, ammount);
 
     int32_t maxIndex = 0;
     for(int32_t i = 1; i < ammount; i++) {
@@ -99,7 +100,7 @@ void Tree::SearchXMinNode(Node* node, int32_t* min, int32_t& ammount) {
         min[maxIndex] = node->value;
     }
 
-    SearchXMinNode(node->right, min, ammount);
+    searchXMinNode(node->right, min, ammount);
 }
 
 int* Tree::SearchXMin(int32_t ammount) {
@@ -108,19 +109,19 @@ int* Tree::SearchXMin(int32_t ammount) {
     int32_t* min = new int32_t[ammount];
     for(size_t i = 0; i < ammount; i++) min[i] = INT32_MAX;
 
-    SearchXMinNode(root, min, ammount);
+    searchXMinNode(root, min, ammount);
     return min;
 }
 
-void Tree::PrintNode(Node* node, int padding) {
+void Tree::printNode(Node* node, int padding) {
     if (node) {
-        PrintNode(node->right, padding + 1);
+        printNode(node->right, padding + 1);
         for (int i = 0; i < padding; i++)  std::cout << "  ";
         std::cout << node->value << std::endl;
-        PrintNode(node->left, padding + 1);
+        printNode(node->left, padding + 1);
     }
 }
 
 void Tree::Print() {
-    PrintNode(root, 0);
+    printNode(root, 0);
 }

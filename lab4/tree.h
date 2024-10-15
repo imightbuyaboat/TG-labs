@@ -17,11 +17,11 @@ private:
     Node* root;
     int32_t count;
 
-    Node* InsertNode(Node* node, int32_t x);
-    bool SearchNode(Node* node, int32_t x);
-    void SearchXMinNode(Node* node, int32_t* min, int32_t& ammount);
-    void DeleteNode(Node* node);
-    void PrintNode(Node* node, int padding);
+    Node* insertNode(Node* node, int32_t x);
+    bool searchNode(Node* node, int32_t x);
+    void searchXMinNode(Node* node, int32_t* min, int32_t& ammount);
+    void deleteNode(Node* node);
+    void printNode(Node* node, int padding);
 public:
     Tree();
     ~Tree();

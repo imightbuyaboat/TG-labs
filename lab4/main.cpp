@@ -5,14 +5,14 @@
 
 #define MIN_ELEMENTS_COUNT 10
 
-void Menu() {
+void menu() {
     std::cout << "\n1. Search element\n" <<
                 "2. Insert element\n" <<
                 "3. Print 10 minimal elements\n" <<
                 "Print number: ";
 }
 
-int32_t Input(int32_t min, int32_t max) {
+int32_t input(int32_t min, int32_t max) {
     int32_t value;
     while (!(std::cin >> value) || value < min || value > max) {
         std::cout << "Print again: ";
@@ -29,7 +29,9 @@ void createTree(const int32_t size, const char* fileName) {
     file.write(reinterpret_cast<const char*>(&size), sizeof(int32_t));
 
     for (int32_t i = 0; i < size; i++) {
-        int32_t value = rand() % (INT32_MAX) - INT32_MAX / 2;
+        //int32_t value = rand() % (INT32_MAX) - INT32_MAX / 2;
+
+        int32_t value = rand() % (100) - 100 / 2;
         file.write(reinterpret_cast<const char*>(&value), sizeof(int32_t));
     }
 
@@ -57,12 +59,12 @@ int main(const int argc, const char* argv[]) {
 
     while(true) {
         tree.Print();
-        Menu();
+        menu();
 
-        switch(Input(1, 3)) {
+        switch(input(1, 3)) {
         case 1:
             std::cout << "Print value: ";
-            value = Input(INT32_MIN, INT32_MAX);
+            value = input(INT32_MIN, INT32_MAX);
 
             start = std::chrono::high_resolution_clock::now();
             found = tree.Search(value);
@@ -74,7 +76,7 @@ int main(const int argc, const char* argv[]) {
         
         case 2:
             std::cout << "Print value: ";
-            value = Input(INT32_MIN, INT32_MAX);
+            value = input(INT32_MIN, INT32_MAX);
 
             start = std::chrono::high_resolution_clock::now();
             added = tree.Insert(value);
