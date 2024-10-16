@@ -58,10 +58,6 @@ void Graph::AddEdge(int16_t src, int16_t end, int16_t weight) {
     node->next = adjacencyList[src];
     adjacencyList[src] = node;
 
-    // node = new Node(src, 0);
-    // node->next = adjacencyList[end];
-    // adjacencyList[end] = node;
-
     Node* temp = adjacencyList[end];
     bool reverseEdgeExists = false;
     while (temp) {
@@ -122,7 +118,7 @@ bool Graph::DFS(int16_t src, int16_t end, bool* visited, int16_t* parent) {
     return false;
 }
 
-void Graph::FordFalkenson(int16_t src, int16_t end) {
+int16_t Graph::FordFalkenson(int16_t src, int16_t end) {
     bool* visited = new bool[size];
     int16_t* parent = new int16_t[size];
     int16_t maxFlow = 0;
@@ -165,4 +161,9 @@ void Graph::FordFalkenson(int16_t src, int16_t end) {
     std::cout << "MaxFlow: " << maxFlow << std::endl;
 
     delete[] visited, parent;
+    return maxFlow;
 }
+
+int16_t** Graph::GetFlow() { return flow; }
+Node** Graph::GetAdjacencyList() { return adjacencyList; }
+int16_t Graph::GetSize() { return size; }

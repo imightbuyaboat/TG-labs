@@ -22,5 +22,8 @@ public:
     void AddEdge(int16_t src, int16_t end, int16_t weight);
     void Print();
     bool DFS(int16_t src, int16_t end, bool* visited, int16_t* parent);
-    void FordFalkenson(int16_t src, int16_t end);
+    int16_t FordFalkenson(int16_t src, int16_t end);
+    int16_t** GetFlow();
+    Node** GetAdjacencyList();
+    int16_t GetSize();
 };

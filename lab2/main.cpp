@@ -56,9 +56,36 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    std::ofstream file(outputFileName);
+    if (!file) {
+        std::cerr << "Can not open file: " << argv[1] << std::endl;
+        return 1;
+    }
+
     Graph graph(argv[1]);
     graph.Print();
-    graph.FordFalkenson(SRC, END);
+    int16_t maxFlow = graph.FordFalkenson(SRC, END);
+    int16_t** flow = graph.GetFlow();
+    Node** adjacencyList = graph.GetAdjacencyList();
+    int16_t size = graph.GetSize();
+
+    file << "Величина потока: " << maxFlow << std::endl << std::endl;
+
+    file << "Величина потока и пропускная способность для каждого ребра:" << std::endl;
+    for(int16_t i = 0; i < size; i++) {
+        Node* temp = adjacencyList[i];
+        while(temp) {
+            if(temp->weight == 0) {
+                temp = temp->next;
+                continue;
+            } 
+            file << "[" << i << ", " << temp->endVertex << "]: " << flow[i][temp->endVertex] << " / " << temp->weight << std::endl;
+            temp = temp->next;
+        }
+    }
+
+    file.close();
+    if(argc == 4) delete[] outputFileName;
 
     return 0;
 }
