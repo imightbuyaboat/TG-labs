@@ -22,7 +22,12 @@ Graph::Graph(const char* fileName, const bool addNewVertex) {
             if(addNewVertex && (i == size - 1 || j == size - 1)) {
                 correspondenceMatrix[i][j] = INT16_MAX;
             }
-            else file.read(reinterpret_cast<char*>(&correspondenceMatrix[i][j]), sizeof(int16_t));
+            else {
+                int16_t value;
+                file.read(reinterpret_cast<char*>(&value), sizeof(int16_t));
+                if(value == 0) value = INT16_MAX;
+                correspondenceMatrix[i][j] = value;
+            }
         }
     }
 
@@ -30,7 +35,7 @@ Graph::Graph(const char* fileName, const bool addNewVertex) {
         for(size_t i = 0; i < size; i++) correspondenceMatrix[size - 1][i] = 0;
     }
 
-    Print();
+    //Print();
 
     file.close();
 }
@@ -58,30 +63,32 @@ int16_t* Graph::BellmanFord(const int16_t src) {
         }
     }
 
-    for(vertexPair pair : vertexPairs) {
-        std::cout << "[" << pair.first << "; " << pair.second << "]  ";
-    }
-    std::cout << std::endl;
-    for(vertexPair pair : vertexPairs) {
-        std::cout << std::setw(8) << correspondenceMatrix[pair.first][pair.second];
-    }
-    std::cout << std::endl << std::endl;
+    // for(vertexPair pair : vertexPairs) {
+    //     std::cout << "[" << pair.first << "; " << pair.second << "]  ";
+    // }
+    // std::cout << std::endl;
+    // for(vertexPair pair : vertexPairs) {
+    //     std::cout << std::setw(8) << correspondenceMatrix[pair.first][pair.second];
+    // }
+    // std::cout << std::endl << std::endl;
 
     for(size_t i = 0; i < size - 1; i++) {
         for(vertexPair pair : vertexPairs) {
-            if(dist[pair.second] > dist[pair.first] + correspondenceMatrix[pair.first][pair.second]) {
+            if(dist[pair.first] != INT16_MAX &&
+                dist[pair.second] > dist[pair.first] + correspondenceMatrix[pair.first][pair.second]) {
                 dist[pair.second] = dist[pair.first] + correspondenceMatrix[pair.first][pair.second];
             }
         }
 
-        for(size_t i = 0; i < size; i++) std::cout << std::setw(3) << dist[i];
-        std::cout << std::endl;
+        // for(size_t i = 0; i < size; i++) std::cout << std::setw(3) << dist[i];
+        // std::cout << std::endl;
     }
-    std::cout << std::endl;
+    //std::cout << std::endl;
 
     bool negativeCycle = false;
     for(vertexPair pair : vertexPairs) {
-        if(dist[pair.second] > dist[pair.first] + correspondenceMatrix[pair.first][pair.second]) {
+        if(dist[pair.first] != INT16_MAX &&
+            dist[pair.second] > dist[pair.first] + correspondenceMatrix[pair.first][pair.second]) {
             negativeCycle = true;
             break;
         }
@@ -129,7 +136,7 @@ int16_t** Graph::Johnson(const char* fileName) {
             }
         }
     }
-    expandedGraph.Print();
+    //expandedGraph.Print();
 
     int16_t** allPairsShortestPaths = new int16_t*[size];
     for (size_t i = 0; i < size; i++) {
@@ -147,13 +154,13 @@ int16_t** Graph::Johnson(const char* fileName) {
         }
     }
 
-    for(size_t i = 0; i < size; i++) {
-        for(size_t j = 0; j < size; j++) {
-            std::cout << std::setw(6) << allPairsShortestPaths[i][j];
-        }
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
+    // for(size_t i = 0; i < size; i++) {
+    //     for(size_t j = 0; j < size; j++) {
+    //         std::cout << std::setw(6) << allPairsShortestPaths[i][j];
+    //     }
+    //     std::cout << std::endl;
+    // }
+    // std::cout << std::endl;
 
     delete[] h;
     return allPairsShortestPaths;
@@ -162,9 +169,10 @@ int16_t** Graph::Johnson(const char* fileName) {
 void Graph::Print() {
     for(size_t i = 0; i < size; i++) {
         for(size_t j = 0; j < size; j++) {
-            std::cout << std::setw(6) << correspondenceMatrix[i][j];
+            std::cout << correspondenceMatrix[i][j] << " ";
         }
         std::cout << std::endl;
+        sleep(3);
     }
     std::cout << std::endl;
 }

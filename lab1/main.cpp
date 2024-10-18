@@ -121,10 +121,11 @@ int main(int argc, char* argv[]) {
         file << "Граф содержит цикл с отрицательным весом";
     }
     else {
-        file << "Вектор расстояний: ";
+        file << "Вектор расстояний:\n";
         for(size_t i = 0; i < graph.getSize(); i++) {
-            if(dist[i] == INT16_MAX) file << "INF ";
-            else file << dist[i] << " "; 
+            file << SRC << " - " << i << ": ";
+            if(dist[i] == INT16_MAX) file << "∞" << std::endl;
+            else file << dist[i] << std::endl; 
         }
         file << std::endl;
     }
