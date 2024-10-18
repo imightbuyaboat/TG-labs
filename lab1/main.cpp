@@ -18,69 +18,16 @@ void createGraph(const int16_t size, const char* fileName) {
 
     file.write(reinterpret_cast<const char*>(&size), sizeof(int16_t));
 
-    // srand(static_cast<unsigned int>(time(0)));
-    // for (int16_t i = 0; i < size; i++) {
-    //     for (int16_t j = 0; j < size; j++) {
-    //         //int16_t value = rand() % (2 * INT16_MAX + 1) - INT16_MAX;
-    //         //int16_t value = rand() % (2 * 20 + 1) - 20;
+    srand(static_cast<unsigned int>(time(0)));
+    for (int16_t i = 0; i < size; i++) {
+        for (int16_t j = 0; j < size; j++) {
+            //int16_t value = rand() % (2 * INT16_MAX + 1) - INT16_MAX;
+            //int16_t value = rand() % (2 * 20 + 1) - 20;
 
-    //         int16_t value = rand() % 21;
-    //         file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    //     }
-    // }
-
-    int16_t value;
-
-    value = 0;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 33;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 33;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 50;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 12;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 33;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 0;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 39;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 36;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 18;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 33;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 39;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 0;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 12;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 21;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 50;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 36;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 12;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 0;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 44;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 12;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 18;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 21;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 44;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-    value = 0;
-    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+            int16_t value = rand() % 21;
+            file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+        }
+    }
 
     file.close();
 }
@@ -97,6 +44,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    //меняем название выходного файла
     if (argc == 4) {
         if (strcmp(argv[2], "-o") == 0) {
             outputFileName = new char[strlen(argv[3]) + 1];
@@ -128,6 +76,8 @@ int main(int argc, char* argv[]) {
             else file << dist[i] << std::endl; 
         }
         file << std::endl;
+
+        delete[] dist;
     }
 
     int16_t **paths = graph.Johnson(argv[1]);
@@ -160,16 +110,15 @@ int main(int argc, char* argv[]) {
 
             if (max == diam) file << i << " ";
         }
-    }
 
-    file.close();
-    if(argc == 4) delete[] outputFileName;
-    if(paths) {
         for(size_t i = 0; i < graph.getSize(); i++) {
             delete[] paths[i];
         }
         delete[] paths;
     }
+
+    file.close();
+    if(argc == 4) delete[] outputFileName;
 
     return 0;
 }

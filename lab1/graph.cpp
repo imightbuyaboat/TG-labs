@@ -1,22 +1,25 @@
 #include "graph.h"
 
 Graph::Graph(const char* fileName, const bool addNewVertex) {
+    //открываем бинарный файл для чтения
     std::ifstream file(fileName, std::ios::binary);
     if (!file) {
         std::cerr << "Can not open file: " << fileName << std::endl;
         exit(1);
     }
 
+    //считваем количество вершин
     file.read(reinterpret_cast<char*>(&size), sizeof(int16_t));
-
     if(addNewVertex) size++;
     else std::cout << "Size of matrix: " << size << " x " << size << std::endl;
 
+    //выделяем память под матрицу смежности
     correspondenceMatrix = new int16_t*[size];
     for(size_t i = 0; i < size; i++) {
         correspondenceMatrix[i] = new int16_t[size];
     }
 
+    //заполняем матрицу смежности из файла
     for(size_t i = 0; i < size; i++) {
         for(size_t j = 0; j < size; j++) {
             if(addNewVertex && (i == size - 1 || j == size - 1)) {
@@ -31,11 +34,10 @@ Graph::Graph(const char* fileName, const bool addNewVertex) {
         }
     }
 
+    //заполняем новый столбец расширенного графа для алгоритма Джонсона
     if(addNewVertex) {
         for(size_t i = 0; i < size; i++) correspondenceMatrix[size - 1][i] = 0;
     }
-
-    //Print();
 
     file.close();
 }
@@ -48,12 +50,14 @@ Graph::~Graph() {
 }
 
 int16_t* Graph::BellmanFord(const int16_t src) {
+    //создаем и заполняем массив длин кратчайших рутей
     int16_t* dist = new int16_t[size];
     for(size_t i = 0; i < size; i++) {
         dist[i] = INT16_MAX;
     }
     dist[src] = 0;
 
+    //создание и заполнение контейнера set множеством ребер
     std::set<vertexPair> vertexPairs;
     for(size_t i = 0; i < size; i++) {
         for(size_t j = 0; j < size; j++) {
@@ -63,15 +67,7 @@ int16_t* Graph::BellmanFord(const int16_t src) {
         }
     }
 
-    // for(vertexPair pair : vertexPairs) {
-    //     std::cout << "[" << pair.first << "; " << pair.second << "]  ";
-    // }
-    // std::cout << std::endl;
-    // for(vertexPair pair : vertexPairs) {
-    //     std::cout << std::setw(8) << correspondenceMatrix[pair.first][pair.second];
-    // }
-    // std::cout << std::endl << std::endl;
-
+    //проходим по всем ребрам (size-1) раз и пытаемся улучшить расстояния
     for(size_t i = 0; i < size - 1; i++) {
         for(vertexPair pair : vertexPairs) {
             if(dist[pair.first] != INT16_MAX &&
@@ -79,12 +75,9 @@ int16_t* Graph::BellmanFord(const int16_t src) {
                 dist[pair.second] = dist[pair.first] + correspondenceMatrix[pair.first][pair.second];
             }
         }
-
-        // for(size_t i = 0; i < size; i++) std::cout << std::setw(3) << dist[i];
-        // std::cout << std::endl;
     }
-    //std::cout << std::endl;
 
+    //определяем наличие отрицательного цикла
     bool negativeCycle = false;
     for(vertexPair pair : vertexPairs) {
         if(dist[pair.first] != INT16_MAX &&
@@ -98,24 +91,28 @@ int16_t* Graph::BellmanFord(const int16_t src) {
     return dist;
 }
 
-void Graph::Dijkstra(const int16_t src, int16_t* distance, int16_t* previous) {
+void Graph::Dijkstra(const int16_t src, int16_t* distance) {
+    //инициализация массива расстояний
     for(size_t i = 0; i < size; i++) distance[i] = INT16_MAX;
-    for(size_t i = 0; i < size; i++) previous[i] = -1;
     distance[src] = 0;
 
+    //создаем очередь
     std::priority_queue<vertexPair, std::vector<vertexPair>, std::greater<vertexPair>> pq;
     pq.push({0, src});
 
+    //пока очередь не пустая
     while (!pq.empty()) {
+        //извлекаем вершину u с наименьшим расстоянием
         int16_t u = pq.top().second;
         pq.pop();
 
+        //цикл по всем ребрам (u, v) 
         for (int16_t v = 0; v < size; v++) {
             if (correspondenceMatrix[u][v] != INT16_MAX) {
+                //считаем альтернативное расстояние и сравниваем с текущим расстоянием
                 int16_t alt = distance[u] + correspondenceMatrix[u][v];
                 if (alt < distance[v]) {
                     distance[v] = alt;
-                    previous[v] = u;
                     pq.push({distance[v], v});
                 }
             }
@@ -124,11 +121,13 @@ void Graph::Dijkstra(const int16_t src, int16_t* distance, int16_t* previous) {
 }
 
 int16_t** Graph::Johnson(const char* fileName) {
-
+    //создаем расширенный граф
     Graph expandedGraph(fileName, true);
+
     int16_t* h = expandedGraph.BellmanFord(size);
     if(!h) return nullptr;
 
+    //корректируем все ребра для устранения ребер с отрицательным весом
     for(size_t i = 0; i < size; i++) {
         for(size_t j = 0; j < size; j++) {
             if (expandedGraph.getElement(i, j) != INT16_MAX) {
@@ -136,15 +135,18 @@ int16_t** Graph::Johnson(const char* fileName) {
             }
         }
     }
-    //expandedGraph.Print();
 
+    //матрица кратчайших расстояний
     int16_t** allPairsShortestPaths = new int16_t*[size];
+    int16_t* distance = new int16_t[size];  //массив для кратчайших расстояний
+
+    //цикл для каждой вершиный графа
     for (size_t i = 0; i < size; i++) {
-        int16_t* distance = new int16_t[size];
-        int16_t* previous = new int16_t[size];
-        expandedGraph.Dijkstra(i, distance, previous);
+        expandedGraph.Dijkstra(i, distance);
 
         allPairsShortestPaths[i] = new int16_t[size];
+
+        //восстанавливаем истинные расстояния в графе
         for (size_t j = 0; j < size; j++) {
             if (distance[j] != INT16_MAX) {
                 allPairsShortestPaths[i][j] = distance[j] + h[j] - h[i];
@@ -154,15 +156,8 @@ int16_t** Graph::Johnson(const char* fileName) {
         }
     }
 
-    // for(size_t i = 0; i < size; i++) {
-    //     for(size_t j = 0; j < size; j++) {
-    //         std::cout << std::setw(6) << allPairsShortestPaths[i][j];
-    //     }
-    //     std::cout << std::endl;
-    // }
-    // std::cout << std::endl;
-
     delete[] h;
+    delete[] distance;
     return allPairsShortestPaths;
 }
 
