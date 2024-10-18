@@ -18,16 +18,69 @@ void createGraph(const int16_t size, const char* fileName) {
 
     file.write(reinterpret_cast<const char*>(&size), sizeof(int16_t));
 
-    srand(static_cast<unsigned int>(time(0)));
-    for (int16_t i = 0; i < size; i++) {
-        for (int16_t j = 0; j < size; j++) {
-            //int16_t value = rand() % (2 * INT16_MAX + 1) - INT16_MAX;
-            //int16_t value = rand() % (2 * 20 + 1) - 20;
+    // srand(static_cast<unsigned int>(time(0)));
+    // for (int16_t i = 0; i < size; i++) {
+    //     for (int16_t j = 0; j < size; j++) {
+    //         //int16_t value = rand() % (2 * INT16_MAX + 1) - INT16_MAX;
+    //         //int16_t value = rand() % (2 * 20 + 1) - 20;
 
-            int16_t value = rand() % 21;
-            file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
-        }
-    }
+    //         int16_t value = rand() % 21;
+    //         file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    //     }
+    // }
+
+    int16_t value;
+
+    value = 0;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 33;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 33;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 50;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 12;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 33;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 0;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 39;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 36;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 18;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 33;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 39;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 0;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 12;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 21;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 50;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 36;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 12;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 0;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 44;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 12;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 18;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 21;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 44;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+    value = 0;
+    file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
 
     file.close();
 }
@@ -82,7 +135,7 @@ int main(int argc, char* argv[]) {
 
         for(size_t i = 0; i < graph.getSize(); i++) {
             int16_t max = 0;
-            for(size_t j = 0; j < graph.getSize(); j++) if (paths[i][j] > max) max = paths[i][j];
+            for(size_t j = 0; j < graph.getSize(); j++) if (paths[i][j] != INT16_MAX && paths[i][j] > max) max = paths[i][j];
 
             if (max > diam) diam = max;
             if (max < radius) radius = max;
@@ -94,7 +147,7 @@ int main(int argc, char* argv[]) {
         file << "Множество центральных вершин: ";
         for(size_t i = 0; i < graph.getSize(); i++) {
             int16_t max = 0;
-            for(size_t j = 0; j < graph.getSize(); j++) if (paths[i][j] > max) max = paths[i][j];
+            for(size_t j = 0; j < graph.getSize(); j++) if (paths[i][j] != INT16_MAX && paths[i][j] > max) max = paths[i][j];
 
             if (max == radius) file << i << " ";
         }
@@ -102,7 +155,7 @@ int main(int argc, char* argv[]) {
         file << std::endl << "Множество периферийных вершин: ";
         for(size_t i = 0; i < graph.getSize(); i++) {
             int16_t max = 0;
-            for(size_t j = 0; j < graph.getSize(); j++) if (paths[i][j] > max) max = paths[i][j];
+            for(size_t j = 0; j < graph.getSize(); j++) if (paths[i][j] != INT16_MAX && paths[i][j] > max) max = paths[i][j];
 
             if (max == diam) file << i << " ";
         }
