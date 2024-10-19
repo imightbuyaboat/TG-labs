@@ -138,7 +138,7 @@ int16_t** Graph::Johnson(const char* fileName) {
 
     //матрица кратчайших расстояний
     int16_t** allPairsShortestPaths = new int16_t*[size];
-    int16_t* distance = new int16_t[size];  //массив для кратчайших расстояний
+    int16_t* distance = new int16_t[size + 1];  //массив для кратчайших расстояний
 
     //цикл для каждой вершиный графа
     for (size_t i = 0; i < size; i++) {
