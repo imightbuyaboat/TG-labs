@@ -8,6 +8,7 @@
 #include <string>
 #include <cstdlib>
 #include <ctime> 
+#include <algorithm>
 #include "graph.h"
 
 char* outputFileName = "default.txt";
@@ -58,7 +59,7 @@ int main(int argc, char* argv[]) {
 
     std::ofstream file(outputFileName);
     if (!file) {
-        std::cerr << "Can not open file: " << argv[1] << std::endl;
+        std::cerr << "Can not open file: " << outputFileName << std::endl;
         return 1;
     }
 
@@ -82,15 +83,25 @@ int main(int argc, char* argv[]) {
 
     int16_t **paths = graph.Johnson(argv[1]);
     if (paths) {
+        int16_t* eccentricities = new int16_t[graph.getSize()];
+        for(size_t i = 0; i < graph.getSize(); i++) eccentricities[i] = 0;
+
         int16_t diam = 0, radius = INT16_MAX;
 
         for(size_t i = 0; i < graph.getSize(); i++) {
-            int16_t max = 0;
-            for(size_t j = 0; j < graph.getSize(); j++) if (paths[i][j] != INT16_MAX && paths[i][j] > max) max = paths[i][j];
+            for(size_t j = 0; j < graph.getSize(); j++) {
+                if (paths[i][j] != INT16_MAX) {
+                    if(paths[i][j] > eccentricities[i]) eccentricities[i] = paths[i][j];
+                }
+            }
 
-            if (max > diam) diam = max;
-            if (max < radius) radius = max;
+            if(eccentricities[i] != 0 && eccentricities[i] != INT16_MAX) {
+                if(eccentricities[i] > diam) diam = eccentricities[i];
+                if(eccentricities[i] < radius) radius = eccentricities[i];
+            }
         }
+
+
 
         file << "Диаметр: " << diam << std::endl;
         file << "Радиус: " << radius << std::endl;
