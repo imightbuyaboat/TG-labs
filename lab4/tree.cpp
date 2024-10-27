@@ -32,6 +32,39 @@ Tree::~Tree() {
     deleteNode(root);
 }
 
+int Tree::getSize(Node* node) {
+    if(!node) return 0;
+    return node->height;
+}
+
+void Tree::fixSize(Node* node) {
+    if(!node) return;
+    node->height = 1 + getSize(node->left) + getSize(node->right);
+}
+
+Node* Tree::rotateRight(Node* node) {
+    Node* q = node->left;
+    if(!q) return node;
+
+    node->left = q->right;
+    q->right = node;
+    q->height = node->height;
+
+    fixSize(node);
+    return q;
+}
+Node* Tree::rotateLeft(Node* node) {
+    Node* p = node->right;
+    if(!p) return node;
+
+    node->right = p->left;
+    p->left = node;
+    p->height = node->height;
+    
+    fixSize(node);
+    return p;
+}
+
 void Tree::deleteNode(Node* node) {
     if(!node) return;
 
@@ -41,10 +74,30 @@ void Tree::deleteNode(Node* node) {
     delete node;
 }
 
+Node* Tree::insertRoot(Node* node, int32_t x) {
+    if(!node) return new Node(x);
+
+    if(x < node->value) {
+        node->left = insertRoot(node->left, x);
+        return rotateRight(node);
+    }
+    else if(x > node->value){
+        node->right = insertRoot(node->right, x);
+        return rotateLeft(node);
+    }
+    else {
+        return node;
+    }
+}
+
 Node* Tree::insertNode(Node* node, int32_t x) {
     if(!node) {
         count++;
         return new Node(x);
+    }
+
+    if(rand() % (node->height + 1) == 0) {
+        return insertRoot(node, x);
     }
 
     if(x < node->value) {
@@ -57,6 +110,7 @@ Node* Tree::insertNode(Node* node, int32_t x) {
         return node;
     }
 
+    fixSize(node);
     return node;
 }
 
