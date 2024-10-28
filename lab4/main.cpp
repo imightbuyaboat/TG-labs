@@ -31,8 +31,8 @@ void createTree(const int32_t size, const char* fileName) {
     for (int32_t i = 0; i < size; i++) {
         //int32_t value = rand() % (INT32_MAX) - INT32_MAX / 2;
 
-        int32_t value = rand() % (100) - 100 / 2;
-        file.write(reinterpret_cast<const char*>(&value), sizeof(int32_t));
+        //int32_t value = rand() % (100) - 100 / 2;
+        file.write(reinterpret_cast<const char*>(&i), sizeof(int32_t));
     }
 
     file.close();

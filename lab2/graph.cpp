@@ -26,9 +26,9 @@ Graph::Graph(const char* fileName) {
 
         AddEdge(startVertex, endVertex, weight);
 
-        std::cout << "[" << startVertex << ", " << endVertex << "]: " << weight << std::endl;
+        //std::cout << "[" << startVertex << ", " << endVertex << "]: " << weight << std::endl;
     }
-    std::cout << std::endl;
+    //std::cout << std::endl;
 
     flow = new int16_t*[size];
     for(int16_t i = 0; i < size; i++) {
@@ -94,40 +94,74 @@ void Graph::Print() {
     std::cout << std::endl;
 }
 
-bool Graph::DFS(int16_t src, int16_t end, bool* visited, int16_t* parent) {
+// bool Graph::DFS(int16_t src, int16_t end, bool* visited, int16_t* parent) {
+//     visited[src] = true;
+
+//     if(src == end) return true;
+
+//     Node* temp = adjacencyList[src];
+//     while(temp) {
+//         if(temp->weight == 0) {
+//             temp = temp->next;
+//             continue;
+//         }
+
+//         int16_t u = temp->endVertex;
+//         int16_t currCapacity = temp->weight - flow[src][u];
+
+//         if(!visited[u] && currCapacity > 0) {
+//             parent[u] = src;
+//             if(DFS(u, end, visited, parent)) return true;
+//         }
+//         temp = temp->next;
+//     }
+//     return false;
+// }
+
+bool Graph::BFS(int16_t src, int16_t end, bool* visited, int16_t* parent) {
+    std::fill(visited, visited + size, false);
+    std::queue<int16_t> q;
+    q.push(src);
     visited[src] = true;
 
-    if(src == end) return true;
+    while (!q.empty()) {
+        int16_t u = q.front();
+        q.pop();
 
-    Node* temp = adjacencyList[src];
-    while(temp) {
-        if(temp->weight == 0) {
+        Node* temp = adjacencyList[u];
+        while (temp) {
+            if (temp->weight == 0) {
+                temp = temp->next;
+                continue;
+            }
+
+            int16_t v = temp->endVertex;
+            int16_t currCapacity = temp->weight - flow[u][v];
+
+            if (!visited[v] && currCapacity > 0) {
+                parent[v] = u;
+                visited[v] = true;
+
+                if (v == end) return true;
+
+                q.push(v);
+            }
             temp = temp->next;
-            continue;
         }
-
-        int16_t u = temp->endVertex;
-        int16_t currCapacity = temp->weight - flow[src][u];
-
-        if(!visited[u] && currCapacity > 0) {
-            parent[u] = src;
-            if(DFS(u, end, visited, parent)) return true;
-        }
-        temp = temp->next;
     }
     return false;
 }
 
-int16_t Graph::FordFalkenson(int16_t src, int16_t end) {
+long Graph::FordFalkenson(int16_t src, int16_t end) {
     bool* visited = new bool[size];
     int16_t* parent = new int16_t[size];
-    int16_t maxFlow = 0;
+    long maxFlow = 0;
 
     while(true) {
         std::fill(visited, visited + size, false);
         std::fill(parent, parent + size, -1);
 
-        if(!DFS(src, end, visited, parent)) break;
+        if(!BFS(src, end, visited, parent)) break;
 
         int16_t pathFlow = INT16_MAX;
         for(int16_t v = end; v != src; v = parent[v]) {
@@ -144,16 +178,16 @@ int16_t Graph::FordFalkenson(int16_t src, int16_t end) {
             }
         }
 
-        std::cout << end << " - ";
+        //std::cout << end << " - ";
         for(int16_t v = end; v != src; v = parent[v]) {
             int16_t u = parent[v];
             flow[u][v] += pathFlow;
             flow[v][u] -= pathFlow;
 
-            std::cout << u;
-            if(u != src) std::cout << " - ";
+            //std::cout << u;
+            //if(u != src) std::cout << " - ";
         }
-        std::cout << ": " << pathFlow << std::endl;
+        //std::cout << ": " << pathFlow << std::endl;
 
         maxFlow += pathFlow;
     }

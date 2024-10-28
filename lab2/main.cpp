@@ -11,7 +11,13 @@
 #include "graph.h"
 
 char* outputFileName = "default.txt";
-const int16_t SRC = 0, END = 3;
+
+//const int16_t SRC = 376, END = 309;     //1
+// const int16_t SRC = 168, END = 267;     //2
+//const int16_t SRC = 340, END = 995;     //3
+//const int16_t SRC = 477, END = 231;     //4 -
+//const int16_t SRC = 637, END = 471;     //5
+const int16_t SRC = 93, END = 604;      //6 -
 
 void createGraph(const int16_t size, const char* fileName) {
     std::ofstream file(fileName, std::ios::binary);
@@ -63,13 +69,13 @@ int main(int argc, char* argv[]) {
     }
 
     Graph graph(argv[1]);
-    graph.Print();
-    int16_t maxFlow = graph.FordFalkenson(SRC, END);
+    //graph.Print();
+    long maxFlow = graph.FordFalkenson(SRC, END);
     int16_t** flow = graph.GetFlow();
     Node** adjacencyList = graph.GetAdjacencyList();
     int16_t size = graph.GetSize();
 
-    file << "Величина потока: " << maxFlow << std::endl << std::endl;
+    file << "Величина потока от " << SRC << " до " << END << " вершины: " << maxFlow << std::endl << std::endl;
 
     file << "Величина потока и пропускная способность для каждого ребра:" << std::endl;
     for(int16_t i = 0; i < size; i++) {
