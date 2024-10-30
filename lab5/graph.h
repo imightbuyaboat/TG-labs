@@ -4,6 +4,8 @@
 #include <queue>
 #include <thread>
 #include <vector>
+//#include <set>
+#include <algorithm>
 #include <mutex>
 
 struct Edge {
@@ -26,13 +28,16 @@ private:
     int16_t size;
     Node** adjacencyList;
 
+    std::mutex minEdgesMutex;
+
+    int16_t Find(int16_t u, std::vector<int16_t>& parent);
+    void Union(int16_t u, int16_t v, std::vector<int16_t>& parent, std::vector<int16_t>& rank);
 public:
     Graph(const char* fileName);
-    Graph(int16_t _size);
     ~Graph();
     void AddEdge(int16_t src, int16_t end, int16_t weight);
     void Print();
     Node** GetAdjacencyList();
     int16_t GetSize();
-    Graph Boruvka();
+    std::vector<Edge> Boruvka();
 };

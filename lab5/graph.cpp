@@ -22,7 +22,7 @@ Graph::Graph(const char* fileName) {
         file.read(reinterpret_cast<char*>(&endVertex), sizeof(int16_t));
         file.read(reinterpret_cast<char*>(&weight), sizeof(int16_t));
 
-        if(weight == 0) continue;
+        //if(weight == 0 || weight == INT16_MAX) continue;
 
         AddEdge(startVertex, endVertex, weight);
 
@@ -31,11 +31,6 @@ Graph::Graph(const char* fileName) {
     //std::cout << std::endl;
 
     file.close();
-}
-
-Graph::Graph(int16_t _size) : size(_size) {
-    adjacencyList = new Node*[_size];
-    for(int16_t i = 0; i < _size; i++) adjacencyList[i] = nullptr;
 }
 
 Graph::~Graph() {
@@ -55,21 +50,9 @@ void Graph::AddEdge(int16_t src, int16_t end, int16_t weight) {
     node->next = adjacencyList[src];
     adjacencyList[src] = node;
 
-    // Node* temp = adjacencyList[end];
-    // bool reverseEdgeExists = false;
-    // while (temp) {
-    //     if (temp->endVertex == src) {
-    //         reverseEdgeExists = true;
-    //         break;
-    //     }
-    //     temp = temp->next;
-    // }
-
-    // if (!reverseEdgeExists) {
-    //     node = new Node(src, 0);
-    //     node->next = adjacencyList[end];
-    //     adjacencyList[end] = node;
-    // }
+    // node = new Node(src, weight);
+    // node->next = adjacencyList[end];
+    // adjacencyList[end] = node;
 }
 
 void Graph::Print() {
@@ -94,98 +77,76 @@ void Graph::Print() {
 Node** Graph::GetAdjacencyList() { return adjacencyList; }
 int16_t Graph::GetSize() { return size; }
 
-int16_t Find(int16_t vertex, std::vector<int16_t>& parent) {
-    if (parent[vertex] != vertex) parent[vertex] = Find(parent[vertex], parent);
-    return parent[vertex];
+int16_t Graph::Find(int16_t u, std::vector<int16_t>& parent) {
+    if (parent[u] != u) parent[u] = Find(parent[u], parent);
+    return parent[u];
 }
 
-void Union(int16_t u, int16_t v, std::vector<int16_t>& parent, std::vector<int16_t>& rank) {
-    int16_t rootU = Find(u, parent);
-    int16_t rootV = Find(v, parent);
-
-    if (rootU != rootV) {
-        if (rank[rootU] > rank[rootV])
-            parent[rootV] = rootU;
-        else if (rank[rootU] < rank[rootV])
-            parent[rootU] = rootV;
-        else {
-            parent[rootV] = rootU;
-            rank[rootU]++;
-        }
+void Graph::Union(int16_t u, int16_t v, std::vector<int16_t>& parent, std::vector<int16_t>& rank) {
+    if (rank[u] < rank[v]) {
+        parent[u] = v;
+    } else if (rank[u] > rank[v]) {
+        parent[v] = u;
+    } else {
+        parent[v] = u;
+        rank[u]++;
     }
 }
 
-Graph Graph::Boruvka() {
-    Graph MST(size);
-
+std::vector<Edge> Graph::Boruvka() {
+    std::vector<Edge> mstEdges;
+    std::vector<int16_t> minEdge(size, -1);
     std::vector<int16_t> parent(size);
     std::vector<int16_t> rank(size, 0);
     for (int16_t i = 0; i < size; i++) parent[i] = i;
 
-    int numComponents = size;
-    std::mutex minEdgesMutex;
+    int16_t numComponents = size;
 
     while(numComponents > 1) {
-        Edge** minEdges = new Edge*[size];
-        std::fill(minEdges, minEdges + size, nullptr);
-
-        auto searchMinEdge = [&](int16_t u, Node* node) {
-            Node* curr = node;
-            int16_t minWeight = INT16_MAX, v;
-            Edge* e = nullptr;
-
-            while(curr) {
-                if(curr->weight < minWeight) {
-                    minWeight = curr->weight;
-                    v = curr->endVertex;
-                }
-                curr = curr->next;
-            }
-
-            if(minWeight == INT16_MAX) return;
-
-            e = new Edge(u, v, minWeight);
-
-            std::lock_guard<std::mutex> lock(minEdgesMutex);
-            minEdges[u] = e;
-        };
+        std::fill(minEdge.begin(), minEdge.end(), -1);
 
         std::vector<std::thread> threads;
-        threads.reserve(size); 
-        for(int16_t i = 0; i < size; i++) {
-            threads.emplace_back(searchMinEdge, i, adjacencyList[i]);
+        for (int16_t u = 0; u < size; u++) {
+            threads.emplace_back([&, u]() {
+                Node* curr = adjacencyList[u];
+                while (curr) {
+                    int16_t setU = Find(u, parent);
+                    int16_t setV = Find(curr->endVertex, parent);
+
+                    if (setU != setV) {
+                        std::lock_guard<std::mutex> lock(minEdgesMutex);
+                        if (minEdge[setU] == -1 || adjacencyList[minEdge[setU]]->weight > curr->weight) {
+                            minEdge[setU] = u; 
+                        }
+                    }
+                    curr = curr->next;
+                }
+            });
         }
+
         for (auto& thread : threads) {
             thread.join();
         }
 
         for (int16_t i = 0; i < size; i++) {
-            if (minEdges[i]) {
-                int16_t u = minEdges[i]->u;
-                int16_t v = minEdges[i]->v;
-                int16_t w = minEdges[i]->weight;
+            if (minEdge[i] != -1) {
+                Node* e = adjacencyList[minEdge[i]];
+                int16_t setU = Find(minEdge[i], parent);
+                int16_t setV = Find(e->endVertex, parent);
 
-                int16_t rootU = Find(u, parent);
-                int16_t rootV = Find(v, parent);
-
-                if (rootU != rootV) {
-                    MST.AddEdge(u, v, w);
-                    Union(rootU, rootV, parent, rank);
+                if (setU != setV) {
+                    mstEdges.emplace_back(minEdge[i], e->endVertex, e->weight);
+                    Union(setU, setV, parent, rank);
                     numComponents--;
-
-                    std::cout<<numComponents<<std::endl;
                 }
-                std::cout<<std::endl;
             }
         }
-
-        for (int16_t i = 0; i < size; i++) {
-            delete minEdges[i];
-        }
-        delete[] minEdges;
-
-        
+        std::cout<<numComponents<<std::endl;
+        // for (const auto& edge : mstEdges) {
+        //     std::cout << "(" << edge.u << ", " << edge.v << ", " << edge.weight << ")";
+        // }    
+        // std::cout<<std::endl;
     }
 
-    return MST;
+    return mstEdges;
 }

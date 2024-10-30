@@ -57,6 +57,7 @@
         "span": "cpp",
         "sstream": "cpp",
         "variant": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "mutex": "cpp"
     }
 }

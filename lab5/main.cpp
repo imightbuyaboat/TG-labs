@@ -6,17 +6,37 @@
 
 char* outputFileName = "default.txt";
 
-//const int16_t SRC = 376, END = 309;     //1
-// const int16_t SRC = 168, END = 267;     //2
-//const int16_t SRC = 340, END = 995;     //3
-//const int16_t SRC = 477, END = 231;     //4 -
-//const int16_t SRC = 637, END = 471;     //5
-const int16_t SRC = 93, END = 604;      //6 -
+void createGraph(const int16_t size, const char* fileName) {
+    std::ofstream file(fileName, std::ios::binary);
+
+    file.write(reinterpret_cast<const char*>(&size), sizeof(int16_t));
+
+    srand(static_cast<unsigned int>(time(0)));
+    for (int16_t i = 0; i < size; i++) {
+        for (int16_t j = 0; j < size; j++) {
+    
+            if(i == j) continue;
+
+            int16_t value = rand() % 21;
+            file.write(reinterpret_cast<const char*>(&i), sizeof(int16_t));
+            file.write(reinterpret_cast<const char*>(&j), sizeof(int16_t));
+            file.write(reinterpret_cast<const char*>(&value), sizeof(int16_t));
+        }
+    }
+
+    file.close();
+}
 
 int main(int argc, char* argv[]) {
     if (argc != 2 && argc != 4) {
         std::cerr << "Incorrect number of arguments: " << argc << std::endl;
         return 1;
+    }
+
+    if (strcmp(argv[1], "-c") == 0) {
+        int16_t size = static_cast<int16_t>(std::stoi(argv[3]));
+        createGraph(size, argv[2]);
+        return 0;
     }
 
     if (argc == 4) {
@@ -37,30 +57,10 @@ int main(int argc, char* argv[]) {
     }
 
     Graph graph(argv[1]);
-    Graph MST = graph.Boruvka();
+    auto mstEdges = graph.Boruvka();
 
-    int16_t size = MST.GetSize();
-    Node** adjacencyList = MST.GetAdjacencyList();
-
-    int totalWeight = 0;
-    std::vector<Edge> mstEdges;
-    std::vector<std::vector<bool>> visited(size, std::vector<bool>(size, false));
-
-    for (int16_t i = 0; i < size; i++) {
-        Node* current = adjacencyList[i];
-        while (current != nullptr) {
-            int16_t u = i;
-            int16_t v = current->endVertex;
-            int16_t weight = current->weight;
-
-            if (!visited[u][v]) {
-                totalWeight += weight;
-                mstEdges.push_back(Edge(u, v, weight)); 
-                visited[u][v] = visited[v][u] = true;
-            }
-            current = current->next; 
-        }
-    }
+    long totalWeight = 0;
+    for (const auto& edge : mstEdges) { totalWeight += edge.weight; }
 
     file << "Вес минимального остовного дерева: " << totalWeight << std::endl;
     file << "Рёбра минимального остовного дерева:" << std::endl;
