@@ -11,7 +11,7 @@ void writeResultToFile(std::ofstream& file, A_Result result, const char* Heurist
         file << "Длина пути: " << end.g << std::endl;
 
         file << "Процент просмотренных клеток: " << 
-            result.visitedNodes * 100.0 / (sizes.first * sizes.second) << "%" << std::endl;
+            100.0 * result.visitedNodes / (sizes.first * sizes.second) << "%" << std::endl;
 
         for(const auto &node : result.path) {
             file << "[" << node.x << ", " << node.y << "] ";
@@ -67,6 +67,9 @@ int main(int argc, char* argv[]) {
 
     result = graph.A(start, end, euclideanHeuristic, false);
     writeResultToFile(file, result, "Манхэттен", sizes);
+
+    result = graph.A(start, end, [](int16_t, int16_t, int16_t, int16_t)->int16_t {return 0;}, false);
+    writeResultToFile(file, result, "Дейкстра", sizes);
 
     file.close();
     if(argc == 4) delete[] outputFileName;
