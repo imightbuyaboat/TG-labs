@@ -3,7 +3,7 @@
 
 char* outputFileName = "default.txt";
 
-void writeResultToFile(std::ofstream& file, A_Result result, const char* Heuristic, std::pair<int16_t, int16_t> sizes) {
+void writeResultToFile(std::ofstream& file, A_Result& result, const char* Heuristic, std::pair<int16_t, int16_t> sizes) {
     if(!result.path.empty()) {
         file << Heuristic << ":" << std::endl;
 
@@ -58,6 +58,10 @@ int main(int argc, char* argv[]) {
 
     Graph graph(argv[1]);
     auto sizes = graph.getSizes();
+
+    file << "length of path between (" << xstart << ", " << ystart << ") and (" <<
+        xend << ", " << yend << ") points" << std::endl << std::endl;
+
 
     auto result = graph.A(start, end, chebyshevHeuristic, false);
     writeResultToFile(file, result, "Чебышев", sizes);

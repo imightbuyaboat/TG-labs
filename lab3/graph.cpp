@@ -85,6 +85,8 @@ A_Result Graph::A(Node start, Node end, int16_t (*h)(int16_t, int16_t, int16_t, 
                 current = *current.parent;
             }
             path.push_front(start);
+
+            //std::cout<<visitedNodes<<std::endl;
  
             return A_Result(path, visitedNodes); // Возвращаем найденный путь
         }

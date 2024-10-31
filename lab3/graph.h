@@ -11,8 +11,8 @@ struct Node {
   double g, h; // Стоимости: g - до текущего узла, h - эвристика, f = g + h
   Node* parent;   // Указатель на родителя для восстановления пути
   
-  Node(int16_t x, int16_t y, double g = 0, double h = 0, Node* parent = nullptr)
-      : x(x), y(y), g(g), h(h), parent(parent) {}
+  Node(int16_t _x, int16_t _y, double _g = 0, double _h = 0, Node* _parent = nullptr)
+      : x(_x), y(_y), g(_g), h(_h), parent(_parent) {}
   
   bool operator>(const Node& other) const {
     return f() > other.f();
@@ -25,8 +25,8 @@ struct A_Result {
   std::list<Node> path;
   size_t visitedNodes;
 
-  A_Result(std::list<Node> path, size_t visitedNode) : 
-    path(path), visitedNodes(visitedNodes) {};
+  A_Result(std::list<Node> _path, size_t _visitedNodes) : 
+    path(_path), visitedNodes(_visitedNodes) {};
 };
 
 class Graph
