@@ -3,18 +3,20 @@
 
 char* outputFileName = "default.txt";
 
-void writeResultToFile(std::ofstream& file, PathResult* result, const char* Heuristic) {
-    if(result) {
+void writeResultToFile(std::ofstream& file, A_Result result, const char* Heuristic, std::pair<int16_t, int16_t> sizes) {
+    if(!result.path.empty()) {
         file << Heuristic << ":" << std::endl;
-        file << "Длина пути: " << result->totalCost << std::endl
-            << "Процент просмотренных клеток: " << result->percentVisited << "%" << std::endl;
-        // for(auto& vertex : result->path) {
-        //     file << "[" << vertex.x << ", " << vertex.y << "] ";
-        // }
-        // file << std::endl << std::endl;
-        file << std::endl;
 
-        delete result;
+        const auto &end = result.path.back();
+        file << "Длина пути: " << end.g << std::endl;
+
+        file << "Процент просмотренных клеток: " << 
+            result.visitedNodes * 100.0 / (sizes.first * sizes.second) << "%" << std::endl;
+
+        for(const auto &node : result.path) {
+            file << "[" << node.x << ", " << node.y << "] ";
+        }
+        file << std::endl << std::endl;
     }
 }
 
@@ -46,7 +48,7 @@ int main(int argc, char* argv[]) {
             yend = static_cast<int16_t>(std::stoi(argv[i+2]));
         }
     }
-
+    Node start(xstart, ystart), end(xend, yend);
 
     std::ofstream file(outputFileName);
     if (!file) {
@@ -55,15 +57,16 @@ int main(int argc, char* argv[]) {
     }
 
     Graph graph(argv[1]);
+    auto sizes = graph.getSizes();
 
-    PathResult* result = graph.A(xstart, ystart, xend, yend, chebyshevHeuristic, false);
-    writeResultToFile(file, result, "Чебышев");
+    auto result = graph.A(start, end, chebyshevHeuristic, false);
+    writeResultToFile(file, result, "Чебышев", sizes);
     
-    result = graph.A(xstart, ystart, xend, yend, euclideanHeuristic, false);
-    writeResultToFile(file, result, "Евклид");
+    result = graph.A(start, end, euclideanHeuristic, false);
+    writeResultToFile(file, result, "Евклид", sizes);
 
-    result = graph.A(xstart, ystart, xend, yend, euclideanHeuristic, false);
-    writeResultToFile(file, result, "Манхэттен");
+    result = graph.A(start, end, euclideanHeuristic, false);
+    writeResultToFile(file, result, "Манхэттен", sizes);
 
     file.close();
     if(argc == 4) delete[] outputFileName;
