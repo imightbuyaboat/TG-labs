@@ -1,6 +1,6 @@
 #include "tree.h"
 
-Tree::Tree() : root(nullptr), count(0) {};
+Tree::Tree() : root(nullptr) {};
 
 void Tree::InitializeFromFile(const char* fileName) {
     std::ifstream file(fileName, std::ios::binary);
@@ -9,21 +9,19 @@ void Tree::InitializeFromFile(const char* fileName) {
         exit(1);
     }
 
-    int32_t size;
-    file.read(reinterpret_cast<char*>(&size), sizeof(int32_t));
-    std::cout << "size: " <<size << std::endl;
-
-    for(int32_t i = 0; i < size; i++) {
+    while(true) {
         int32_t x;
         file.read(reinterpret_cast<char*>(&x), sizeof(int32_t));
-        std::cout << x << " ";
-        
+
+        if (file.eof()) break;
+
         if(!Insert(x)) {
             std::cerr << "Can not insert element: " << x << std::endl;
             exit(1);
         }
+
+        //std::cout << "[" << startVertex << ", " << endVertex << "]: " << weight << std::endl;
     }
-    std::cout << std::endl << std::endl;
 
     file.close();
 }
@@ -92,7 +90,6 @@ Node* Tree::insertRoot(Node* node, int32_t x) {
 
 Node* Tree::insertNode(Node* node, int32_t x) {
     if(!node) {
-        count++;
         return new Node(x);
     }
 
@@ -158,7 +155,6 @@ void Tree::searchXMinNode(Node* node, int32_t* min, int32_t& ammount) {
 }
 
 int* Tree::SearchXMin(int32_t ammount) {
-    if(count < ammount) return nullptr;
 
     int32_t* min = new int32_t[ammount];
     for(size_t i = 0; i < ammount; i++) min[i] = INT32_MAX;

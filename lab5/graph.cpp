@@ -50,9 +50,9 @@ void Graph::AddEdge(int16_t src, int16_t end, int16_t weight) {
     node->next = adjacencyList[src];
     adjacencyList[src] = node;
 
-    // node = new Node(src, weight);
-    // node->next = adjacencyList[end];
-    // adjacencyList[end] = node;
+    node = new Node(src, weight);
+    node->next = adjacencyList[end];
+    adjacencyList[end] = node;
 }
 
 void Graph::Print() {
@@ -93,60 +93,71 @@ void Graph::Union(int16_t u, int16_t v, std::vector<int16_t>& parent, std::vecto
     }
 }
 
-std::vector<Edge> Graph::Boruvka() {
-    std::vector<Edge> mstEdges;
-    std::vector<int16_t> minEdge(size, -1);
+void Graph::boruvkaStep(std::vector<int16_t>& parent, std::vector<Node>& minEdges, int16_t start, int16_t end) {
+    for (int16_t u = start; u < end; ++u) {
+        int16_t compU = Find(u, parent);
+        Node* node = adjacencyList[u];
+        while(node) {
+            int16_t v = node->endVertex;
+            int16_t weight = node->weight;
+            int16_t compV = Find(v, parent);
+
+            if (compU != compV && weight < minEdges[compU].weight) {
+                minEdges[compU] = {v, weight};
+            }
+
+            node = node->next;
+        }
+    }
+}
+
+MST Graph::Boruvka(int16_t numThreads) {
     std::vector<int16_t> parent(size);
     std::vector<int16_t> rank(size, 0);
-    for (int16_t i = 0; i < size; i++) parent[i] = i;
+    std::vector<Node> minEdges(size, {-1, INT16_MAX});
+    MST mst; // Для хранения рёбер остовного дерева
+    int64_t totalWeight = 0; // Суммарный вес рёбер остовного дерева
 
-    int16_t numComponents = size;
+    for (int16_t v = 0; v < size; v++) {
+        parent[v] = v;
+    }
 
-    while(numComponents > 1) {
-        std::fill(minEdge.begin(), minEdge.end(), -1);
+    std::atomic<int16_t> numComponents = size;
+    std::vector<std::thread> threads;
 
-        std::vector<std::thread> threads;
-        for (int16_t u = 0; u < size; u++) {
-            threads.emplace_back([&, u]() {
-                Node* curr = adjacencyList[u];
-                while (curr) {
-                    int16_t setU = Find(u, parent);
-                    int16_t setV = Find(curr->endVertex, parent);
+    while (numComponents > 1) {
+        fill(minEdges.begin(), minEdges.end(), Node(-1, INT16_MAX));
 
-                    if (setU != setV) {
-                        std::lock_guard<std::mutex> lock(minEdgesMutex);
-                        if (minEdge[setU] == -1 || adjacencyList[minEdge[setU]]->weight > curr->weight) {
-                            minEdge[setU] = u; 
-                        }
-                    }
-                    curr = curr->next;
-                }
-            });
+        int16_t step = (size + numThreads - 1) / numThreads;
+
+        for (int16_t t = 0; t < numThreads; t++) {
+            int16_t start = t * step;
+            int16_t end = std::min((int16_t)(start + step), size);
+            threads.emplace_back(&Graph::boruvkaStep, this, std::ref(parent), std::ref(minEdges), start, end);
         }
 
-        for (auto& thread : threads) {
-            thread.join();
+        for (auto& th : threads) {
+            th.join();
         }
+        threads.clear();
 
-        for (int16_t i = 0; i < size; i++) {
-            if (minEdge[i] != -1) {
-                Node* e = adjacencyList[minEdge[i]];
-                int16_t setU = Find(minEdge[i], parent);
-                int16_t setV = Find(e->endVertex, parent);
+        for (int16_t u = 0; u < size; ++u) {
+            if (minEdges[u].endVertex != -1) {
+                int16_t v = minEdges[u].endVertex;
+                int16_t weight = minEdges[u].weight;
 
-                if (setU != setV) {
-                    mstEdges.emplace_back(minEdge[i], e->endVertex, e->weight);
-                    Union(setU, setV, parent, rank);
+                int16_t compU = Find(u, parent);
+                int16_t compV = Find(v, parent);
+
+                if (compU != compV) {
+                    mst.emplace_back(u, v, weight);
+                    totalWeight += weight;
+                    Union(compU, compV, parent, rank);
                     numComponents--;
                 }
             }
         }
-        std::cout<<numComponents<<std::endl;
-        // for (const auto& edge : mstEdges) {
-        //     std::cout << "(" << edge.u << ", " << edge.v << ", " << edge.weight << ")";
-        // }    
-        // std::cout<<std::endl;
     }
 
-    return mstEdges;
+    return mst;
 }

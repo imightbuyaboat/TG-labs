@@ -16,7 +16,6 @@ class Tree
 {
 private:
     Node* root;
-    int32_t count;
 
     int getSize(Node* node);
     void fixSize(Node* node);

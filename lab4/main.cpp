@@ -58,7 +58,8 @@ int main(const int argc, const char* argv[]) {
     bool found, added;
 
     while(true) {
-        tree.Print();
+        //tree.Print();
+        
         menu();
 
         switch(input(1, 3)) {

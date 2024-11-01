@@ -57,15 +57,15 @@ int main(int argc, char* argv[]) {
     }
 
     Graph graph(argv[1]);
-    auto mstEdges = graph.Boruvka();
+    auto mst = graph.Boruvka(graph.GetSize());
 
     long totalWeight = 0;
-    for (const auto& edge : mstEdges) { totalWeight += edge.weight; }
+    for (const auto& edge : mst) { totalWeight += std::get<2>(edge); }
 
     file << "Вес минимального остовного дерева: " << totalWeight << std::endl;
     file << "Рёбра минимального остовного дерева:" << std::endl;
-    for (const auto& edge : mstEdges) {
-        file << "(" << edge.u << ", " << edge.v << ", " << edge.weight << ")" << std::endl;
+    for (const auto& edge : mst) {
+        file << "(" << std::get<0>(edge) << ", " << std::get<1>(edge) << ", " << std::get<2>(edge) << ")" << std::endl;
     }
 
     file.close();

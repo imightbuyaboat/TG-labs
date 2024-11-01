@@ -7,13 +7,17 @@
 //#include <set>
 #include <algorithm>
 #include <mutex>
+#include <atomic>
+#include <tuple>
 
-struct Edge {
-    int16_t u, v;
-    int16_t weight;
+#define MST std::vector<std::tuple<int16_t, int16_t, int16_t>>
 
-    Edge(int16_t _u, int16_t _v, int16_t _weight) : u(_u), v(_v), weight(_weight) {};
-};
+// struct BoruvkaResult {
+//     MST mst; // Для хранения рёбер остовного дерева
+//     int64_t totalWeight;
+
+//     BoruvkaResult(MST _mst, int64_t _totalWeight) : mst(_mst), totalWeight(_totalWeight) {};
+// };
 
 struct Node {
     int16_t endVertex;
@@ -32,6 +36,7 @@ private:
 
     int16_t Find(int16_t u, std::vector<int16_t>& parent);
     void Union(int16_t u, int16_t v, std::vector<int16_t>& parent, std::vector<int16_t>& rank);
+    void boruvkaStep(std::vector<int16_t>& parent, std::vector<Node>& minEdges, int16_t start, int16_t end);
 public:
     Graph(const char* fileName);
     ~Graph();
@@ -39,5 +44,5 @@ public:
     void Print();
     Node** GetAdjacencyList();
     int16_t GetSize();
-    std::vector<Edge> Boruvka();
+    MST Boruvka(int16_t numThreads);
 };
