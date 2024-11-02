@@ -1,5 +1,6 @@
 #include "graph.h"
 
+//конструктор
 Graph::Graph(const char* fileName) {
     std::ifstream file(fileName, std::ios::binary);
     if (!file) {
@@ -7,12 +8,15 @@ Graph::Graph(const char* fileName) {
         exit(1);
     }
 
+    //считваем количество вершин
     file.read(reinterpret_cast<char*>(&size), sizeof(int16_t));
     std::cout << "size: " << size << std::endl;
 
+    //создаем список смежности
     adjacencyList = new Node*[size];
     for(int16_t i = 0; i < size; i++) adjacencyList[i] = nullptr;
 
+    //считваем ребра и добавляем в список
     while(true) {
         int16_t startVertex, endVertex, weight;
         file.read(reinterpret_cast<char*>(&startVertex), sizeof(int16_t));
@@ -25,11 +29,9 @@ Graph::Graph(const char* fileName) {
         if(weight == 0) continue;
 
         AddEdge(startVertex, endVertex, weight);
-
-        //std::cout << "[" << startVertex << ", " << endVertex << "]: " << weight << std::endl;
     }
-    //std::cout << std::endl;
 
+    //создаем матрицу потоков с нулевыми значениями для каждого ребра
     flow = new int16_t*[size];
     for(int16_t i = 0; i < size; i++) {
         flow[i] = new int16_t[size];
@@ -53,11 +55,14 @@ Graph::~Graph() {
     delete[] adjacencyList;
 }
 
+//функция добавлениЯ ребра в список смежности
 void Graph::AddEdge(int16_t src, int16_t end, int16_t weight) {
+    //добавляем ребро в список
     Node* node = new Node(end, weight);
     node->next = adjacencyList[src];
     adjacencyList[src] = node;
 
+    //проверяем существует ли обратное ребро в списке
     Node* temp = adjacencyList[end];
     bool reverseEdgeExists = false;
     while (temp) {
@@ -68,30 +73,12 @@ void Graph::AddEdge(int16_t src, int16_t end, int16_t weight) {
         temp = temp->next;
     }
 
+    //если не существует, то добавляем его в список
     if (!reverseEdgeExists) {
         node = new Node(src, 0);
         node->next = adjacencyList[end];
         adjacencyList[end] = node;
     }
-}
-
-void Graph::Print() {
-    for(size_t i = 0; i < size; i++) {
-        std::cout << "w[" << i << "] = [";
-
-        Node* temp = adjacencyList[i];
-        while(temp) {
-            if(temp->weight == 0) {
-                temp = temp->next;
-                continue;
-            } 
-            std::cout << temp->endVertex;
-            temp = temp->next;
-            if(temp && temp->weight != 0) std::cout << ", ";
-        }
-        std::cout << "]" << std::endl;
-    }
-    std::cout << std::endl;
 }
 
 // bool Graph::DFS(int16_t src, int16_t end, bool* visited, int16_t* parent) {
@@ -118,32 +105,42 @@ void Graph::Print() {
 //     return false;
 // }
 
+//метод BFS для поиска пути с положительной пропускной способностью
 bool Graph::BFS(int16_t src, int16_t end, bool* visited, int16_t* parent) {
     std::fill(visited, visited + size, false);
+
+    //создаем очередь и добавляем начальную вершину
     std::queue<int16_t> q;
     q.push(src);
+
     visited[src] = true;
 
+    //выполняем BFS
     while (!q.empty()) {
+        //достаем очередную вершину из очереди
         int16_t u = q.front();
         q.pop();
 
         Node* temp = adjacencyList[u];
         while (temp) {
+            //пропускаем ребра с нулевым весом
             if (temp->weight == 0) {
                 temp = temp->next;
                 continue;
             }
 
-            int16_t v = temp->endVertex;
-            int16_t currCapacity = temp->weight - flow[u][v];
+            int16_t v = temp->endVertex;    //вершина
+            int16_t currCapacity = temp->weight - flow[u][v];   //текущая пропускная способность ребра (u, v)
 
+            //если вершина не посещена и остаточная пропускная способность положительная
             if (!visited[v] && currCapacity > 0) {
                 parent[v] = u;
                 visited[v] = true;
 
+                //если достигнута конечная вершина
                 if (v == end) return true;
 
+                //добавляем очередную вершину в очередь
                 q.push(v);
             }
             temp = temp->next;
@@ -153,16 +150,18 @@ bool Graph::BFS(int16_t src, int16_t end, bool* visited, int16_t* parent) {
 }
 
 long Graph::FordFalkenson(int16_t src, int16_t end) {
-    bool* visited = new bool[size];
-    int16_t* parent = new int16_t[size];
-    long maxFlow = 0;
+    bool* visited = new bool[size];         //массив посещенных вершин
+    int16_t* parent = new int16_t[size];    //массив для восстановления пути
+    long maxFlow = 0;      //максимальный поток
 
     while(true) {
         std::fill(visited, visited + size, false);
         std::fill(parent, parent + size, -1);
 
+        //ищем путь с положительной пропускной способностью
         if(!BFS(src, end, visited, parent)) break;
 
+        //находим минимальную пропускную способность на пути
         int16_t pathFlow = INT16_MAX;
         for(int16_t v = end; v != src; v = parent[v]) {
             int16_t u = parent[v];
@@ -178,16 +177,12 @@ long Graph::FordFalkenson(int16_t src, int16_t end) {
             }
         }
 
-        //std::cout << end << " - ";
+        //обновляем потоки вдоль найденного пути
         for(int16_t v = end; v != src; v = parent[v]) {
             int16_t u = parent[v];
             flow[u][v] += pathFlow;
             flow[v][u] -= pathFlow;
-
-            //std::cout << u;
-            //if(u != src) std::cout << " - ";
         }
-        //std::cout << ": " << pathFlow << std::endl;
 
         maxFlow += pathFlow;
     }

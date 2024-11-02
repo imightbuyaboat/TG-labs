@@ -4,35 +4,24 @@
 #include <queue>
 #include <thread>
 #include <vector>
-//#include <set>
 #include <algorithm>
-#include <mutex>
 #include <atomic>
 #include <tuple>
 
 #define MST std::vector<std::tuple<int16_t, int16_t, int16_t>>
 
-// struct BoruvkaResult {
-//     MST mst; // Для хранения рёбер остовного дерева
-//     int64_t totalWeight;
-
-//     BoruvkaResult(MST _mst, int64_t _totalWeight) : mst(_mst), totalWeight(_totalWeight) {};
-// };
-
 struct Node {
-    int16_t endVertex;
-    int16_t weight;
-    Node* next;
+    int16_t endVertex;  //конечная вершина
+    int16_t weight;     //вес
+    Node* next;         //указатель на следующий узел
 
     Node(int16_t _endVertex, int16_t _weight) : endVertex(_endVertex), weight(_weight), next(nullptr) {};
 };
 
 class Graph {
 private:
-    int16_t size;
-    Node** adjacencyList;
-
-    std::mutex minEdgesMutex;
+    int16_t size;   //количество вершин
+    Node** adjacencyList;   //список смежности
 
     int16_t Find(int16_t u, std::vector<int16_t>& parent);
     void Union(int16_t u, int16_t v, std::vector<int16_t>& parent, std::vector<int16_t>& rank);
@@ -41,7 +30,6 @@ public:
     Graph(const char* fileName);
     ~Graph();
     void AddEdge(int16_t src, int16_t end, int16_t weight);
-    void Print();
     Node** GetAdjacencyList();
     int16_t GetSize();
     MST Boruvka(int16_t numThreads);

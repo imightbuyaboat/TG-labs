@@ -4,10 +4,10 @@
 #include <iomanip>
 
 struct Node {
-    int32_t value;
-    int height;
-    Node* left;
-    Node* right;
+    int32_t value;  //значение-ключ
+    int height;     //высота
+    Node* left;     //левый потомок
+    Node* right;    //правый потомок
 
     Node(int32_t _value) : value(_value), height(1), left(nullptr), right(nullptr) {};
 };
@@ -15,7 +15,7 @@ struct Node {
 class Tree
 {
 private:
-    Node* root;
+    Node* root; //корень дерева
 
     int getSize(Node* node);
     void fixSize(Node* node);

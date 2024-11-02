@@ -43,8 +43,8 @@ int main(int argc, char* argv[]) {
     }
 
     Graph graph(argv[1]);
-    //graph.Print();
     long maxFlow = graph.FordFalkenson(SRC, END);
+    
     int16_t** flow = graph.GetFlow();
     Node** adjacencyList = graph.GetAdjacencyList();
     int16_t size = graph.GetSize();

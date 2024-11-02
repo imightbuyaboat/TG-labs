@@ -1,31 +1,26 @@
 #include "graph.h"
 
-Graph::Graph(const char *fileName)
-{
-    // открываем бинарный файл для чтения
+Graph::Graph(const char *fileName) {
+    //открываем бинарный файл для чтения
     std::ifstream file(fileName, std::ios::binary);
-    if (!file)
-    {
+    if (!file) {
         std::cerr << "Can not open file: " << fileName << std::endl;
         exit(1);
     }
 
-    // считваем количество вершин
+    //считваем количество вершин
     file.read(reinterpret_cast<char *>(&width), sizeof(int16_t));
     file.read(reinterpret_cast<char *>(&height), sizeof(int16_t));
 
-    // выделяем память под матрицу
+    //выделяем память под матрицу
     matrix = new int16_t *[height];
-    for (size_t i = 0; i < height; i++)
-    {
+    for (size_t i = 0; i < height; i++) {
         matrix[i] = new int16_t[width];
     }
 
     // заполняем матрицу смежности из файла
-    for (size_t i = 0; i < height; i++)
-    {
-        for (size_t j = 0; j < width; j++)
-        {
+    for (size_t i = 0; i < height; i++) {
+        for (size_t j = 0; j < width; j++) {
             file.read(reinterpret_cast<char *>(&matrix[i][j]), sizeof(int16_t));
         }
     }
@@ -33,81 +28,76 @@ Graph::Graph(const char *fileName)
     file.close();
 }
 
-Graph::~Graph()
-{
-    for (int16_t i = 0; i < height; i++)
-    {
+Graph::~Graph() {
+    for (int16_t i = 0; i < height; i++) {
         delete[] matrix[i];
     }
     delete[] matrix;
 }
 
-A_Result Graph::A(Node start, Node end, int16_t (*h)(int16_t, int16_t, int16_t, int16_t), bool isNeedToCheckDiagonally)
-{
-    std::vector<std::vector<bool>> visited(height, std::vector<bool>(width, false));
-    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList;
+A_Result Graph::A(Node start, Node end, int16_t (*h)(int16_t, int16_t, int16_t, int16_t), bool isNeedToCheckDiagonally) {
+    std::vector<std::vector<bool>> visited(height, std::vector<bool>(width, false));    //матрица посещенных вершин
+    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList;  //приоритетная очередь
 
+    //вычисляем h начальной клетки
     start.h = h(start.x, start.y, end.x, end.y);
     openList.push(start);
 
-    size_t totalNodes = height * width, visitedNodes = 0;
+    size_t totalNodes = height * width, //общее количество клеток
+           visitedNodes = 0;            //количество посещенных клеток
 
+    //путь
     std::list<Node> path;
 
+    //определяем в каких направлениях может двигаться алгоритм для данной эвристики
     std::vector<std::pair<int16_t, int16_t>> directions;
     if(isNeedToCheckDiagonally) {
         directions = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
     }
     else directions = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}}; 
 
-    // Основной цикл алгоритма A*
-    while (!openList.empty())
-    {
+    //основной цикл алгоритма A*
+    while(!openList.empty()) {
+        //достаем очередной узел из очереди
         Node current = openList.top();
         openList.pop();
 
-        // Если узел уже посещен, пропустить
+        //если узел уже посещен, пропускаем его
         if (visited[current.x][current.y]) continue;
 
-        // Пометить узел как посещенный и увеличить счетчик посещений
+        //помечаем узел как посещенный и увеличиваем счетчик посещений
         visited[current.x][current.y] = true;
         visitedNodes++;
 
-        // Проверка, достигли ли мы целевого узла
-        if (current.x == end.x && current.y == end.y)
-        {
-            double pathLength = current.g;
-
-            // Восстановление пути из цепочки родителей
-            while (current.parent)
-            {
+        //проверка, достигли ли мы целевого узла
+        if (current.x == end.x && current.y == end.y) {
+            //восстановление пути из цепочки родителей
+            while (current.parent) {
                 path.push_front(current);
                 current = *current.parent;
             }
             path.push_front(start);
 
-            //std::cout<<visitedNodes<<std::endl;
- 
-            return A_Result(path, visitedNodes); // Возвращаем найденный путь
+            //возвращаем найденный путь и количество посещенных клеток
+            return A_Result(path, visitedNodes);
         }
 
-        // Проверка соседних узлов
-        for (const auto &dir : directions)
-        {
+        //проверка соседних узлов
+        for (const auto &dir : directions) {
+            //определяем координаты соседней клетки
             int nx = current.x + dir.first;
             int ny = current.y + dir.second;
 
-            // Проверка границ и того, что узел не был посещен
-            if (nx >= 0 && nx < height && ny >= 0 && ny < width && !visited[nx][ny])
-            {
-                // Рассчет стоимости перехода на соседний узел
+            //проверка границ и того, что узел не был посещен
+            if (nx >= 0 && nx < height && ny >= 0 && ny < width && !visited[nx][ny]) {
+                //рассчет стоимости перехода на соседний узел
                 double new_g = current.g + abs(matrix[nx][ny] - matrix[current.x][current.y]) + 1;
                 double new_h = h(nx, ny, end.x, end.y);
 
-                // Создание нового узла-соседа с обновленными значениями
+                //создание нового узла-соседа с обновленными значениями
                 Node neighbor(nx, ny, new_g, new_h, new Node(current));
 
-                // Добавление узла в очередь на проверку
+                //добавление узла в очередь на проверку
                 openList.push(neighbor);
             }
         }

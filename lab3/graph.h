@@ -7,9 +7,9 @@
 #include <list>
 
 struct Node {
-  int16_t x, y;       // Координаты узла
-  double g, h; // Стоимости: g - до текущего узла, h - эвристика, f = g + h
-  Node* parent;   // Указатель на родителя для восстановления пути
+  int16_t x, y; //координаты узла
+  double g, h;  //стоимости: g - до текущего узла, h - эвристика
+  Node* parent; //указатель на родителя для восстановления пути
   
   Node(int16_t _x, int16_t _y, double _g = 0, double _h = 0, Node* _parent = nullptr)
       : x(_x), y(_y), g(_g), h(_h), parent(_parent) {}
@@ -22,8 +22,8 @@ struct Node {
 };
 
 struct A_Result {
-  std::list<Node> path;
-  size_t visitedNodes;
+  std::list<Node> path; //найденный путь
+  size_t visitedNodes;  //количество посещенных клеток
 
   A_Result(std::list<Node> _path, size_t _visitedNodes) : 
     path(_path), visitedNodes(_visitedNodes) {};
@@ -32,8 +32,8 @@ struct A_Result {
 class Graph
 {
 private:
-    int16_t height, width;
-    int16_t** matrix;
+    int16_t height, width;  //размеры графа
+    int16_t** matrix;       //матрица клеток
 
 public:
     Graph(const char* fileName);

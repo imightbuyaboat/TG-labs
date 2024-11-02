@@ -58,6 +58,11 @@
         "sstream": "cpp",
         "variant": "cpp",
         "queue": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "condition_variable": "cpp",
+        "list": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp"
     }
 }
