@@ -1,9 +1,10 @@
 #include <string.h>
+#include <chrono>
 #include "graph.h"
 
 char* outputFileName = "default.txt";
 
-void writeResultToFile(std::ofstream& file, A_Result& result, const char* Heuristic, std::pair<int16_t, int16_t> sizes) {
+void writeResultToFile(std::ofstream& file, A_Result& result, const char* Heuristic, std::pair<int16_t, int16_t> sizes, std::chrono::duration<double> duration) {
     if(!result.path.empty()) {
         file << Heuristic << ":" << std::endl;
 
@@ -12,6 +13,8 @@ void writeResultToFile(std::ofstream& file, A_Result& result, const char* Heuris
 
         file << "Процент просмотренных клеток: " << 
             100.0 * result.visitedNodes / (sizes.first * sizes.second) << "%" << std::endl;
+
+        file << "Время выполнения: " << duration.count() << std::endl;
 
         for(const auto &node : result.path) {
             file << "[" << node.x << ", " << node.y << "] ";
@@ -59,21 +62,35 @@ int main(int argc, char* argv[]) {
     Graph graph(argv[1]);
     auto sizes = graph.getSizes();
 
+    std::chrono::system_clock::time_point startTime, endTime;
+    std::chrono::duration<double> duration;
+
     file << "length of path between (" << xstart << ", " << ystart << ") and (" <<
         xend << ", " << yend << ") points" << std::endl << std::endl;
 
-
+    startTime = std::chrono::high_resolution_clock::now();
     auto result = graph.A(start, end, chebyshevHeuristic, false);
-    writeResultToFile(file, result, "Чебышев", sizes);
+    endTime = std::chrono::high_resolution_clock::now();
+    duration = endTime - startTime;
+    writeResultToFile(file, result, "Чебышев", sizes, duration);
     
+    startTime = std::chrono::high_resolution_clock::now();
     result = graph.A(start, end, euclideanHeuristic, false);
-    writeResultToFile(file, result, "Евклид", sizes);
+    endTime = std::chrono::high_resolution_clock::now();
+    duration = endTime - startTime;
+    writeResultToFile(file, result, "Евклид", sizes, duration);
 
+    startTime = std::chrono::high_resolution_clock::now();
     result = graph.A(start, end, euclideanHeuristic, false);
-    writeResultToFile(file, result, "Манхэттен", sizes);
+    endTime = std::chrono::high_resolution_clock::now();
+    duration = endTime - startTime;
+    writeResultToFile(file, result, "Манхэттен", sizes, duration);
 
+    startTime = std::chrono::high_resolution_clock::now();
     result = graph.A(start, end, [](int16_t, int16_t, int16_t, int16_t)->int16_t {return 0;}, false);
-    writeResultToFile(file, result, "Дейкстра", sizes);
+    endTime = std::chrono::high_resolution_clock::now();
+    duration = endTime - startTime;
+    writeResultToFile(file, result, "Дейкстра", sizes, duration);
 
     file.close();
     if(argc == 4) delete[] outputFileName;
