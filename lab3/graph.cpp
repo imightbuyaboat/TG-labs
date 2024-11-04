@@ -35,7 +35,7 @@ Graph::~Graph() {
     delete[] matrix;
 }
 
-A_Result Graph::A(Node start, Node end, int16_t (*h)(int16_t, int16_t, int16_t, int16_t), bool isNeedToCheckDiagonally) {
+std::list<Node> Graph::A(Node start, Node end, int16_t (*h)(int16_t, int16_t, int16_t, int16_t), bool isNeedToCheckDiagonally, size_t& visitedNodes) {
     std::vector<std::vector<bool>> visited(height, std::vector<bool>(width, false));    //матрица посещенных вершин
     std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList;  //приоритетная очередь
 
@@ -43,8 +43,7 @@ A_Result Graph::A(Node start, Node end, int16_t (*h)(int16_t, int16_t, int16_t, 
     start.h = h(start.x, start.y, end.x, end.y);
     openList.push(start);
 
-    size_t totalNodes = height * width, //общее количество клеток
-           visitedNodes = 0;            //количество посещенных клеток
+    size_t totalNodes = height * width; //общее количество клеток
 
     //путь
     std::list<Node> path;
@@ -79,7 +78,7 @@ A_Result Graph::A(Node start, Node end, int16_t (*h)(int16_t, int16_t, int16_t, 
             path.push_front(start);
 
             //возвращаем найденный путь и количество посещенных клеток
-            return A_Result(path, visitedNodes);
+            return path;
         }
 
         //проверка соседних узлов
@@ -103,7 +102,7 @@ A_Result Graph::A(Node start, Node end, int16_t (*h)(int16_t, int16_t, int16_t, 
         }
     }
 
-    return A_Result({}, -1);
+    return {};
 }
 
 int16_t euclideanHeuristic(int16_t x, int16_t y, int16_t xend, int16_t yend)

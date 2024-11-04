@@ -4,19 +4,19 @@
 
 char* outputFileName = "default.txt";
 
-void writeResultToFile(std::ofstream& file, A_Result& result, const char* Heuristic, std::pair<int16_t, int16_t> sizes, std::chrono::duration<double> duration) {
-    if(!result.path.empty()) {
+void writeResultToFile(std::ofstream& file, std::list<Node> path, size_t visitedNodes, const char* Heuristic, std::pair<int16_t, int16_t> sizes, std::chrono::duration<double> duration) {
+    if(!path.empty()) {
         file << Heuristic << ":" << std::endl;
 
-        const auto &end = result.path.back();
+        const auto &end = path.back();
         file << "Длина пути: " << end.g << std::endl;
 
         file << "Процент просмотренных клеток: " << 
-            100.0 * result.visitedNodes / (sizes.first * sizes.second) << "%" << std::endl;
+            100.0 * visitedNodes / (sizes.first * sizes.second) << "%" << std::endl;
 
         file << "Время выполнения: " << duration.count() << std::endl;
 
-        for(const auto &node : result.path) {
+        for(const auto &node : path) {
             file << "[" << node.x << ", " << node.y << "] ";
         }
         file << std::endl << std::endl;
@@ -61,36 +61,40 @@ int main(int argc, char* argv[]) {
 
     Graph graph(argv[1]);
     auto sizes = graph.getSizes();
+    size_t visitedNodes = 0;
 
     std::chrono::system_clock::time_point startTime, endTime;
     std::chrono::duration<double> duration;
 
     file << "length of path between (" << xstart << ", " << ystart << ") and (" <<
         xend << ", " << yend << ") points" << std::endl << std::endl;
-
-    startTime = std::chrono::high_resolution_clock::now();
-    auto result = graph.A(start, end, chebyshevHeuristic, false);
-    endTime = std::chrono::high_resolution_clock::now();
-    duration = endTime - startTime;
-    writeResultToFile(file, result, "Чебышев", sizes, duration);
     
     startTime = std::chrono::high_resolution_clock::now();
-    result = graph.A(start, end, euclideanHeuristic, false);
+    auto path = graph.A(start, end, chebyshevHeuristic, true, visitedNodes);
     endTime = std::chrono::high_resolution_clock::now();
     duration = endTime - startTime;
-    writeResultToFile(file, result, "Евклид", sizes, duration);
-
+    writeResultToFile(file, path, visitedNodes, "Чебышев", sizes, duration);
+    
+    visitedNodes = 0;
     startTime = std::chrono::high_resolution_clock::now();
-    result = graph.A(start, end, euclideanHeuristic, false);
+    path = graph.A(start, end, euclideanHeuristic, true, visitedNodes);
     endTime = std::chrono::high_resolution_clock::now();
     duration = endTime - startTime;
-    writeResultToFile(file, result, "Манхэттен", sizes, duration);
+    writeResultToFile(file, path, visitedNodes, "Евклид", sizes, duration);
 
+    visitedNodes = 0;
     startTime = std::chrono::high_resolution_clock::now();
-    result = graph.A(start, end, [](int16_t, int16_t, int16_t, int16_t)->int16_t {return 0;}, false);
+    path = graph.A(start, end, euclideanHeuristic, false, visitedNodes);
     endTime = std::chrono::high_resolution_clock::now();
     duration = endTime - startTime;
-    writeResultToFile(file, result, "Дейкстра", sizes, duration);
+    writeResultToFile(file, path, visitedNodes, "Манхэттен", sizes, duration);
+
+    visitedNodes = 0;
+    startTime = std::chrono::high_resolution_clock::now();
+    path = graph.A(start, end, [](int16_t, int16_t, int16_t, int16_t)->int16_t {return 0;}, false, visitedNodes);
+    endTime = std::chrono::high_resolution_clock::now();
+    duration = endTime - startTime;
+    writeResultToFile(file, path, visitedNodes, "Дейкстра", sizes, duration);
 
     file.close();
     if(argc == 4) delete[] outputFileName;

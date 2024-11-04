@@ -8,35 +8,35 @@ Graph::Graph(const char* fileName, const bool addNewVertex) {
         exit(1);
     }
 
-    //считваем количество вершин
+    //считываем количество вершин
     file.read(reinterpret_cast<char*>(&size), sizeof(int16_t));
     if(addNewVertex) size++;
     else std::cout << "Size of matrix: " << size << " x " << size << std::endl;
 
     //выделяем память под матрицу смежности
-    correspondenceMatrix = new int16_t*[size];
+    adjaencyMatrix = new int16_t*[size];
     for(size_t i = 0; i < size; i++) {
-        correspondenceMatrix[i] = new int16_t[size];
+        adjaencyMatrix[i] = new int16_t[size];
     }
 
     //заполняем матрицу смежности из файла
     for(size_t i = 0; i < size; i++) {
         for(size_t j = 0; j < size; j++) {
             if(addNewVertex && (i == size - 1 || j == size - 1)) {
-                correspondenceMatrix[i][j] = INT16_MAX;
+                adjaencyMatrix[i][j] = INT16_MAX;
             }
             else {
                 int16_t value;
                 file.read(reinterpret_cast<char*>(&value), sizeof(int16_t));
                 if(value == 0) value = INT16_MAX;
-                correspondenceMatrix[i][j] = value;
+                adjaencyMatrix[i][j] = value;
             }
         }
     }
 
     //заполняем новый столбец расширенного графа для алгоритма Джонсона
     if(addNewVertex) {
-        for(size_t i = 0; i < size; i++) correspondenceMatrix[size - 1][i] = 0;
+        for(size_t i = 0; i < size; i++) adjaencyMatrix[size - 1][i] = 0;
     }
 
     file.close();
@@ -44,9 +44,9 @@ Graph::Graph(const char* fileName, const bool addNewVertex) {
 
 Graph::~Graph() {
     for(size_t i = 0; i < size; i++) {
-        delete[] correspondenceMatrix[i];
+        delete[] adjaencyMatrix[i];
     }
-    delete[] correspondenceMatrix;
+    delete[] adjaencyMatrix;
 }
 
 int16_t* Graph::BellmanFord(const int16_t src) {
@@ -61,7 +61,7 @@ int16_t* Graph::BellmanFord(const int16_t src) {
     std::set<vertexPair> vertexPairs;
     for(size_t i = 0; i < size; i++) {
         for(size_t j = 0; j < size; j++) {
-            if(correspondenceMatrix[i][j] != INT16_MAX && i != j) {
+            if(adjaencyMatrix[i][j] != INT16_MAX && i != j) {
                 vertexPairs.insert({i, j});
             }
         }
@@ -71,8 +71,8 @@ int16_t* Graph::BellmanFord(const int16_t src) {
     for(size_t i = 0; i < size - 1; i++) {
         for(vertexPair pair : vertexPairs) {
             if(dist[pair.first] != INT16_MAX &&
-                dist[pair.second] > dist[pair.first] + correspondenceMatrix[pair.first][pair.second]) {
-                dist[pair.second] = dist[pair.first] + correspondenceMatrix[pair.first][pair.second];
+                dist[pair.second] > dist[pair.first] + adjaencyMatrix[pair.first][pair.second]) {
+                dist[pair.second] = dist[pair.first] + adjaencyMatrix[pair.first][pair.second];
             }
         }
     }
@@ -81,7 +81,7 @@ int16_t* Graph::BellmanFord(const int16_t src) {
     bool negativeCycle = false;
     for(vertexPair pair : vertexPairs) {
         if(dist[pair.first] != INT16_MAX &&
-            dist[pair.second] > dist[pair.first] + correspondenceMatrix[pair.first][pair.second]) {
+            dist[pair.second] > dist[pair.first] + adjaencyMatrix[pair.first][pair.second]) {
             negativeCycle = true;
             break;
         }
@@ -108,9 +108,9 @@ void Graph::Dijkstra(const int16_t src, int16_t* distance) {
 
         //цикл по всем ребрам (u, v) 
         for (int16_t v = 0; v < size; v++) {
-            if (correspondenceMatrix[u][v] != INT16_MAX) {
+            if (adjaencyMatrix[u][v] != INT16_MAX) {
                 //считаем альтернативное расстояние и сравниваем с текущим расстоянием
-                int16_t alt = distance[u] + correspondenceMatrix[u][v];
+                int16_t alt = distance[u] + adjaencyMatrix[u][v];
                 if (alt < distance[v]) {
                     distance[v] = alt;
                     pq.push({distance[v], v});
@@ -158,16 +158,6 @@ int16_t** Graph::Johnson(const char* fileName) {
 
     delete[] h;
     delete[] distance;
-    return allPairsShortestPaths;
-}
 
-void Graph::Print() {
-    for(size_t i = 0; i < size; i++) {
-        for(size_t j = 0; j < size; j++) {
-            std::cout << correspondenceMatrix[i][j] << " ";
-        }
-        std::cout << std::endl;
-        sleep(3);
-    }
-    std::cout << std::endl;
+    return allPairsShortestPaths;
 }

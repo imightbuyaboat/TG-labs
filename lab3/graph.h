@@ -21,14 +21,6 @@ struct Node {
   const double f() const { return g + h; }
 };
 
-struct A_Result {
-  std::list<Node> path; //найденный путь
-  size_t visitedNodes;  //количество посещенных клеток
-
-  A_Result(std::list<Node> _path, size_t _visitedNodes) : 
-    path(_path), visitedNodes(_visitedNodes) {};
-};
-
 class Graph
 {
 private:
@@ -38,9 +30,9 @@ private:
 public:
     Graph(const char* fileName);
     ~Graph();
-    A_Result A(Node start, Node end, 
+    std::list<Node> A(Node start, Node end, 
                     int16_t (*h)(int16_t, int16_t, int16_t, int16_t), 
-                    bool isNeedToCheckDiagonally);
+                    bool isNeedToCheckDiagonally, size_t& visitedNodes);
     std::pair<int16_t, int16_t> getSizes() { return {height, width}; }
 };
 
