@@ -40,23 +40,61 @@ int main(int argc, char* argv[]) {
 
     Graph graph(argv[1]);
 
-    auto matchingEdges = graph.MaximumBipartiteMatching();
-    if(!matchingEdges.empty()) {
-        file << "Граф является двудольным" << std::endl;
+    std::set<std::pair<int16_t, int16_t>> bridges;
+    std::vector<int16_t> articulationPoints;
+    std::vector<std::vector<int16_t>> biconnectedComponents;
+    std::vector<std::vector<int16_t>> connectedComponents = graph.findConnectedComponents();
 
-        int64_t matchingSize = 0;
-        for(auto& edge : matchingEdges) {
-            matchingSize++;
-        }
-        file << "Число паросочетаний: " << matchingSize << std::endl;
+    std::vector<int16_t> discovery(graph.GetSize(), -1), low(graph.GetSize(), -1);
+    std::vector<bool> visited(graph.GetSize(), false);
+    int16_t time = 0;
 
-        for(auto& edge : matchingEdges) {
-            file << "(" << edge.first << ", " << edge.second << ")" << std::endl;
+    for (int v = 0; v < graph.GetSize(); v++) {
+        if (!visited[v]) {
+            graph.findBridgesAndArticulationPoints(v, -1, discovery, low, visited, articulationPoints, bridges, time);
         }
     }
-    else {
-        file << "Граф не является двудольным";
-    }
+
+    graph.findBiconnectedComponents(biconnectedComponents);
+
+    file << "Bridges:\n";
+        for (const auto& bridge : bridges) {
+            file << "(" << bridge.first << ", " << bridge.second << ")\n";
+        }
+
+        file << "Cut vertices:\n";
+        file << "[";
+        for (size_t i = 0; i < articulationPoints.size(); ++i) {
+            file << articulationPoints[i];
+            if (i < articulationPoints.size() - 1) {
+                file << ", ";
+            }
+        }
+        file << "]\n";
+
+        file << "Biconnected components:\n";
+        for (const auto& component : biconnectedComponents) {
+            file << "[";
+            for (size_t i = 0; i < component.size(); ++i) {
+                file << component[i];
+                if (i < component.size() - 1) {
+                    file << ", ";
+                }
+            }
+            file << "]\n";
+        }
+
+        file << "Connected components:\n";
+        for (const auto& component : connectedComponents) {
+            file << "[";
+            for (size_t i = 0; i < component.size(); ++i) {
+                file << component[i];
+                if (i < component.size() - 1) {
+                    file << ", ";
+                }
+            }
+            file << "]\n";
+        }
 
     file.close();
     if(argc == 4) delete[] outputFileName;
