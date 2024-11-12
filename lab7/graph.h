@@ -6,7 +6,9 @@
 #include <iomanip>
 #include <unistd.h>
 #include <set>
-#include <stack>
+#include <list>
+#include <queue>
+#include <algorithm>
 
 #define vertexPair std::pair<int16_t, int16_t>
 
@@ -15,17 +17,21 @@ private:
     int16_t size;   //количество вершин
     int16_t** adjaencyMatrix; //матрица смежности
 
-    void DFS(int16_t v, std::vector<bool> &visited, std::vector<int16_t> &component);
+    void bfs(size_t to, std::vector<bool>& visited, std::vector<size_t>& component);
+
+    std::vector<size_t> find_biconn(std::list<size_t>& stack, size_t from, size_t to);
+
+    void dfs(size_t from, size_t parent, std::vector<bool>& visited, std::vector<size_t>& disc,
+           std::vector<size_t>& low, std::vector<size_t>& parent_arr, std::set<std::pair<size_t, size_t>>& bridges,
+           std::set<size_t>& aps, std::vector<std::vector<size_t>>& biconn_comp, std::list<size_t>& stack);
     
 public:
     Graph(const char* fileName);
     ~Graph();
-    int16_t GetSize() { return size; };
+    //int16_t GetSize() { return size; };
 
-    std::vector<std::vector<int16_t>> findConnectedComponents();
-    void findBridgesAndArticulationPoints(int16_t v, int16_t parent,
-                                      std::vector<int16_t> &discovery, std::vector<int16_t> &low,
-                                      std::vector<bool> &visited, std::vector<int16_t> &articulationPoints,
-                                      std::set<std::pair<int16_t, int16_t>> &bridges, int16_t &time);
-    void findBiconnectedComponents(std::vector<std::vector<int16_t>> &biconnectedComponents);
+    std::vector<std::vector<size_t>> find_connected_components();
+    void find_bridge_aps(std::set<std::pair<size_t, size_t>>& bridges,
+                        std::set<size_t>& aps,
+                        std::vector<std::vector<size_t>>& biconn_comp);
 };

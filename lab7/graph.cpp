@@ -1,136 +1,166 @@
 #include "graph.h"
 
-Graph::Graph(const char* fileName) {
-    //открываем бинарный файл для чтения
+Graph::Graph(const char *fileName)
+{
+    // открываем бинарный файл для чтения
     std::ifstream file(fileName, std::ios::binary);
     if (!file) {
         std::cerr << "Can not open file: " << fileName << std::endl;
         exit(1);
     }
 
-    //считываем количество вершин
-    file.read(reinterpret_cast<char*>(&size), sizeof(int16_t));
+    // считываем количество вершин
+    file.read(reinterpret_cast<char *>(&size), sizeof(int16_t));
     std::cout << "Size of matrix: " << size << " x " << size << std::endl;
 
-    //выделяем память под матрицу смежности
-    adjaencyMatrix = new int16_t*[size];
-    for(size_t i = 0; i < size; i++) {
+    // выделяем память под матрицу смежности
+    adjaencyMatrix = new int16_t *[size];
+    for (size_t i = 0; i < size; i++) {
         adjaencyMatrix[i] = new int16_t[size];
     }
 
-    //заполняем матрицу смежности из файла
-    for(size_t i = 0; i < size; i++) {
-        for(size_t j = 0; j < size; j++) {
-            file.read(reinterpret_cast<char*>(&adjaencyMatrix[i][j]), sizeof(int16_t));
+    // заполняем матрицу смежности из файла
+    for (size_t i = 0; i < size; i++) {
+        for (size_t j = 0; j < size; j++) {
+            file.read(reinterpret_cast<char *>(&adjaencyMatrix[i][j]), sizeof(int16_t));
         }
     }
 
     file.close();
 }
 
-Graph::~Graph() {
-    for(size_t i = 0; i < size; i++) {
+Graph::~Graph()
+{
+    for (size_t i = 0; i < size; i++) {
         delete[] adjaencyMatrix[i];
     }
     delete[] adjaencyMatrix;
 }
 
-void Graph::DFS(int16_t v, std::vector<bool> &visited, std::vector<int16_t> &component) {
-    visited[v] = true;
-    component.push_back(v);
-    for (int16_t u = 0; u < size; ++u) {
-        if (adjaencyMatrix[v][u] && !visited[u]) {
-            DFS(u, visited, component);
-        }
-    }
-}
+void Graph::bfs(size_t to, std::vector<bool> &visited, std::vector<size_t> &component)
+{
+    std::queue<size_t> q;
+    q.push(to);
+    visited[to] = true;
+    component.push_back(to);
 
-std::vector<std::vector<int16_t>> Graph::findConnectedComponents() {
-    std::vector<bool> visited(size, false);
-    std::vector<std::vector<int16_t>> components;
+    while (!q.empty()) {
+        size_t from = q.front();
+        q.pop();
 
-    for (int16_t v = 0; v < size; ++v) {
-        if (!visited[v]) {
-            std::vector<int16_t> component;
-            DFS(v, visited, component);
-            components.push_back(component);
-        }
-    }
-    return components;
-}
-
-void Graph::findBridgesAndArticulationPoints(int16_t v, int16_t parent,
-                                      std::vector<int16_t> &discovery, std::vector<int16_t> &low,
-                                      std::vector<bool> &visited, std::vector<int16_t> &articulationPoints,
-                                      std::set<std::pair<int16_t, int16_t>> &bridges, int16_t &time) {
-    visited[v] = true;
-    discovery[v] = low[v] = ++time;
-    int16_t children = 0;
-
-    for (int16_t u = 0; u < size; ++u) {
-        if (!adjaencyMatrix[v][u]) continue;
-
-        if (!visited[u]) {
-            children++;
-            findBridgesAndArticulationPoints(u, v, discovery, low, visited,
-                                             articulationPoints, bridges, time);
-
-            low[v] = std::min(low[v], low[u]);
-
-            if (low[u] > discovery[v]) {
-                bridges.insert({std::min(v, u), std::max(v, u)});
+        for (size_t w = 0; w < size; ++w) {
+            if (adjaencyMatrix[from][w] == 1 && !visited[w]) {
+                visited[w] = true;
+                q.push(w);
+                component.push_back(w);
             }
-            if (parent == -1 && children > 1) {
-                articulationPoints.push_back(v);
-            } else if (parent != -1 && low[u] >= discovery[v]) {
-                articulationPoints.push_back(v);
-            }
-        } else if (u != parent) {
-            low[v] = std::min(low[v], discovery[u]);
         }
     }
 }
 
-void Graph::findBiconnectedComponents(std::vector<std::vector<int16_t>> &biconnectedComponents) {
-    std::vector<int16_t> discovery(size, -1), low(size, -1);
-    std::vector<bool> visited(size, false);
-    std::stack<std::pair<int16_t, int16_t>> edgeStack;
-    int16_t time = 0;
+std::vector<size_t> Graph::find_biconn(std::list<size_t> &stack, size_t from, size_t to)
+{
+    std::set<size_t> unique_vert;
+    std::vector<size_t> biconn_comp;
 
-    auto dfsBCC = [&](auto&& dfsBCC, int16_t v, int16_t parent) -> void {
-        visited[v] = true;
-        discovery[v] = low[v] = ++time;
-        int16_t children = 0;
+    while (!stack.empty() && stack.back() != from * size + to) {
+        size_t edge = stack.back();
+        stack.pop_back();
 
-        for (int16_t u = 0; u < size; ++u) {
-            if (!adjaencyMatrix[v][u]) continue;
+        // Добавляем уникальные вершины компоненты, используя множество
+        unique_vert.insert(edge / size);
+        unique_vert.insert(edge % size);
+    }
 
-            if (!visited[u]) {
+    if (!stack.empty()) {
+        size_t edge = stack.back();
+        stack.pop_back();
+
+        // Добавляем оставшиеся уникальные вершины
+        unique_vert.insert(edge / size);
+        unique_vert.insert(edge % size);
+    }
+
+    // Переносим уникальные вершины в вектор двусвязной компоненты
+    for (size_t v : unique_vert)
+        biconn_comp.push_back(v);
+
+    return biconn_comp;
+}
+
+void Graph::dfs(size_t from, size_t parent, std::vector<bool> &visited, std::vector<size_t> &disc,
+                std::vector<size_t> &low, std::vector<size_t> &parent_arr, std::set<std::pair<size_t, size_t>> &bridges,
+                std::set<size_t> &aps, std::vector<std::vector<size_t>> &biconn_comp, std::list<size_t> &stack)
+{
+    static int time = 0;
+    visited[from] = true;
+    disc[from] = low[from] = ++time;
+    size_t children = 0;
+
+    for (size_t to = 0; to < size; ++to) {
+        if (adjaencyMatrix[from][to] == 1) {
+
+            if (!visited[to]) {
                 children++;
-                edgeStack.push({v, u});
-                dfsBCC(dfsBCC, u, v);
+                parent_arr[to] = from;
+                stack.push_back(from * size + to);
 
-                low[v] = std::min(low[v], low[u]);
+                dfs(to, from, visited, disc, low, parent_arr, bridges,
+                    aps, biconn_comp, stack);
 
-                if ((parent == -1 && children > 1) || (parent != -1 && low[u] >= discovery[v])) {
-                    std::vector<int16_t> component;
-                    while (edgeStack.top() != std::make_pair(v, u)) {
-                        component.push_back(edgeStack.top().second);
-                        edgeStack.pop();
-                    }
-                    component.push_back(edgeStack.top().second);
-                    component.push_back(edgeStack.top().first);
-                    edgeStack.pop();
-                    biconnectedComponents.push_back(component);
-                }
-            } else if (u != parent && discovery[u] < discovery[v]) {
-                edgeStack.push({v, u});
-                low[v] = std::min(low[v], discovery[u]);
+                low[from] = std::min(low[from], low[to]);
+
+                if (parent_arr[from] == -1 && children > 1)
+                    aps.insert(from);
+
+                if (parent_arr[from] != -1 && low[to] >= disc[from])
+                    aps.insert(from);
+
+                if (low[to] > disc[from])
+                    bridges.insert({from, to});
+
+                if (low[to] >= disc[from])
+                    biconn_comp.push_back(std::move(find_biconn(stack, from, to)));
+
+            }
+            else if (to != parent && disc[to] < disc[from]) {
+                low[from] = std::min(low[from], disc[to]);
+
+                if (disc[from] > disc[to])
+                    stack.push_back(from * size + to);
             }
         }
-    };
-
-    for (int16_t v = 0; v < size; ++v) {
-        if (!visited[v]) dfsBCC(dfsBCC, v, -1);
     }
+}
+
+std::vector<std::vector<size_t>> Graph::find_connected_components()
+{
+    std::vector<bool> visited(size, false);
+    std::vector<std::vector<size_t>> conn_comp;
+
+    for (size_t to = 0; to < size; to++) {
+
+        if (!visited[to]) {
+            std::vector<size_t> component;
+            bfs(to, visited, component);
+            std::sort(component.begin(), component.end());
+            conn_comp.push_back(component);
+        }
+    }
+
+    return conn_comp;
+}
+
+void Graph::find_bridge_aps(std::set<std::pair<size_t, size_t>>& bridges,
+                            std::set<size_t>& aps,
+                            std::vector<std::vector<size_t>>& biconn_comp)
+{
+    std::vector<bool> visited(size, false);
+    std::vector<size_t> disc(size, -1), low(size, -1), parent_arr(size, -1);
+    std::list<size_t> stack;
+
+    for (size_t to = 0; to < size; to++)
+        if (!visited[to])
+            dfs(to, -1, visited, disc, low, parent_arr, bridges,
+                aps, biconn_comp, stack);
 }

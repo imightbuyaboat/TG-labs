@@ -1,14 +1,9 @@
 #include <stdio.h>
 #include <cstring>
-#include <stdlib.h>
-#include <set>
 #include <cstdint>
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <cstdlib>
-#include <ctime> 
-#include <algorithm>
 #include "graph.h"
 
 char* outputFileName = "default.txt";
@@ -40,61 +35,45 @@ int main(int argc, char* argv[]) {
 
     Graph graph(argv[1]);
 
-    std::set<std::pair<int16_t, int16_t>> bridges;
-    std::vector<int16_t> articulationPoints;
-    std::vector<std::vector<int16_t>> biconnectedComponents;
-    std::vector<std::vector<int16_t>> connectedComponents = graph.findConnectedComponents();
+    auto conn_comp = graph.find_connected_components();
 
-    std::vector<int16_t> discovery(graph.GetSize(), -1), low(graph.GetSize(), -1);
-    std::vector<bool> visited(graph.GetSize(), false);
-    int16_t time = 0;
+    std::set<std::pair<size_t, size_t>> bridges;
+    std::set<size_t> aps;
+    std::vector<std::vector<size_t>> biconn_comp;
 
-    for (int v = 0; v < graph.GetSize(); v++) {
-        if (!visited[v]) {
-            graph.findBridgesAndArticulationPoints(v, -1, discovery, low, visited, articulationPoints, bridges, time);
-        }
+    graph.find_bridge_aps(bridges, aps, biconn_comp);
+
+    file << "Компоненты связности:\n";
+    sort(conn_comp.begin(), conn_comp.end());
+    for (auto &component : conn_comp)
+    {
+        file << '[';
+        for (const auto &to : component)
+            file << to << (to == component.back() ? "" : ", ");
+        file << "]\n";
     }
 
-    graph.findBiconnectedComponents(biconnectedComponents);
+    file << "Мосты:\n";
+    for (const auto &[from, to] : bridges)
+        file << "(" << from << ", " << to << ")" << std::endl;
 
-    file << "Bridges:\n";
-        for (const auto& bridge : bridges) {
-            file << "(" << bridge.first << ", " << bridge.second << ")\n";
-        }
+    file << "Точки сочлинения:\n[";
+    size_t i = 1;
+    for (const auto &ap : aps)
+    {
+        file << ap << (i == aps.size() ? "" : ", ");
+        i++;
+    }
+    file << "]\n";
 
-        file << "Cut vertices:\n";
-        file << "[";
-        for (size_t i = 0; i < articulationPoints.size(); ++i) {
-            file << articulationPoints[i];
-            if (i < articulationPoints.size() - 1) {
-                file << ", ";
-            }
-        }
+    file << "Компоненты двусвязности:\n";
+    for (const auto &comp : biconn_comp)
+    {
+        file << '[';
+        for (int to : comp)
+            file << to << (to == comp.back() ? "" : ", ");
         file << "]\n";
-
-        file << "Biconnected components:\n";
-        for (const auto& component : biconnectedComponents) {
-            file << "[";
-            for (size_t i = 0; i < component.size(); ++i) {
-                file << component[i];
-                if (i < component.size() - 1) {
-                    file << ", ";
-                }
-            }
-            file << "]\n";
-        }
-
-        file << "Connected components:\n";
-        for (const auto& component : connectedComponents) {
-            file << "[";
-            for (size_t i = 0; i < component.size(); ++i) {
-                file << component[i];
-                if (i < component.size() - 1) {
-                    file << ", ";
-                }
-            }
-            file << "]\n";
-        }
+    }
 
     file.close();
     if(argc == 4) delete[] outputFileName;
