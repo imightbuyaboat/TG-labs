@@ -1,9 +1,8 @@
 #include <iostream>
 #include <cstring>
 #include <chrono>
-#include "tree.h"
-
-#define MIN_ELEMENTS_COUNT 10
+#include <iomanip>
+#include "RBTree.h"
 
 void menu() {
     std::cout << "\n1. Search element\n" <<
@@ -23,43 +22,20 @@ int32_t input(int32_t min, int32_t max) {
     return value;
 }
 
-void createTree(const int32_t size, const char* fileName) {
-    std::ofstream file(fileName, std::ios::binary);
-
-    file.write(reinterpret_cast<const char*>(&size), sizeof(int32_t));
-
-    for (int32_t i = 0; i < size; i++) {
-        //int32_t value = rand() % (INT32_MAX) - INT32_MAX / 2;
-
-        //int32_t value = rand() % (100) - 100 / 2;
-        file.write(reinterpret_cast<const char*>(&i), sizeof(int32_t));
-    }
-
-    file.close();
-}
-
 int main(const int argc, const char* argv[]) {
-    if(argc != 2 && argc != 4) {
+    if(argc != 2) {
         std::cerr << "Incorrect number of arguments: " << argc << std::endl;
         return 1;
     }
 
-    if (strcmp(argv[1], "-c") == 0) {
-        int32_t size = static_cast<int32_t>(std::stoi(argv[3]));
-        createTree(size, argv[2]);
-        return 0;
-    }
-
-    Tree tree;
+    RBTree tree;
     tree.InitializeFromFile(argv[1]);
     
     std::chrono::system_clock::time_point start, end;
     int32_t value;
-    bool found, added;
+    Node* found;
 
-    while(true) {
-        //tree.Print();
-        
+    while(true) {        
         menu();
 
         switch(input(1, 3)) {
@@ -68,7 +44,7 @@ int main(const int argc, const char* argv[]) {
             value = input(INT32_MIN, INT32_MAX);
 
             start = std::chrono::high_resolution_clock::now();
-            found = tree.Search(value);
+            found = tree.findValue(value);
             end = std::chrono::high_resolution_clock::now();
 
             if(found) std::cout << "Element " << value << " is found\n";
@@ -80,29 +56,24 @@ int main(const int argc, const char* argv[]) {
             value = input(INT32_MIN, INT32_MAX);
 
             start = std::chrono::high_resolution_clock::now();
-            added = tree.Insert(value);
+            tree.insertValue(value);
             end = std::chrono::high_resolution_clock::now();
 
-            if(added) std::cout << "Element " << value << " is found\n";
-            else std::cout << "Element " << value << " isn`t found\n";
+            std::cout << "Element " << value << " added\n";
             break;
 
         case 3:
             start = std::chrono::high_resolution_clock::now();
-            auto min = tree.SearchXMin(MIN_ELEMENTS_COUNT);
+            auto min = tree.getSmallest10();
             end = std::chrono::high_resolution_clock::now();
 
-            if(!min) std::cout << "Tree has less than " << MIN_ELEMENTS_COUNT << " elements\n";
-            else {
-                std::cout << "[";
-                for(size_t i = 0; i < MIN_ELEMENTS_COUNT; i++) {
-                    std::cout << min[i];
-                    if (i != MIN_ELEMENTS_COUNT - 1) std::cout << ", ";
-                }
-                std::cout << "]\n";
-
-                delete[] min;
+            std::cout << "[";
+            for(size_t i = 0; i < 10; i++) {
+                std::cout << min[i];
+                if (i != 9) std::cout << ", ";
             }
+            std::cout << "]\n";
+
             break;
         }
 
