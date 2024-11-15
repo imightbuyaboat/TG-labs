@@ -18,12 +18,11 @@ class RBTree {
 public:
     RBTree();
     ~RBTree();
-    //функция инициализации дерева из файла
     void InitializeFromFile(const char* fileName);
     
-    void insertValue(int32_t n);  
-    Node* findValue(int32_t data);                   // поиск элемента
-    std::vector<int32_t> getSmallest10();                      // вывод 10 наименьших элементов
+    void insertValue(int32_t n);
+    Node* findValue(int32_t data);                  
+    std::vector<int32_t> getSmallest10();                     
     
 private:
     int getColor(Node *&node);
@@ -32,16 +31,9 @@ private:
     void rotateLeft(Node *&ptr);
     void rotateRight(Node *&ptr);
     void fixInsertRBTree(Node *&ptr);
-    void fixDeleteRBTree(Node *&node);
-    
-    Node* minValueNode(Node *&node);
-    Node* maxValueNode(Node *&node);
-    
-    int getBlackHeight(Node *node);
     
     void deleteNode(Node* node);
-
-    Node* insertBST(Node *&root, Node *&ptr);
-    Node* findValue(Node *node, int32_t data);       // рекурсивная версия поиска
-    void getSmallest10(Node *node, std::vector<int32_t> &smallest); // рекурсивная версия поиска 10 наименьших
+    Node* insertNode(Node *&root, Node *&ptr);
+    Node* findValue(Node *node, int32_t data);      
+    void getSmallest10(Node *node, std::vector<int32_t> &smallest);
 };

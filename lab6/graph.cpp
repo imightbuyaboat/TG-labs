@@ -35,7 +35,9 @@ Graph::~Graph() {
     delete[] adjaencyMatrix;
 }
 
+//функция определения двудольности графа
 bool Graph::isBipartite() {
+    //массив цветов вершин (-1 - вершина не окрашена)
     std::vector<int16_t> color(size, -1);
 
     //проверяем каждый компонент графа, чтобы покрыть несвязные графы
@@ -55,12 +57,13 @@ bool Graph::isBipartite() {
             for (int16_t v = 0; v < size; ++v) {
                 //если вершина v смежна с u
                 if (adjaencyMatrix[u][v] == 1) {
+                    //если вершина v не окрашена, окрашиваем в противоположный цвет
                     if (color[v] == -1) {
-                        //если вершина v не окрашена, окрашиваем в противоположный цвет
                         color[v] = 1 - color[u];
                         q.push(v);
+
+                    //если вершина v уже окрашена тем же цветом, что и u, граф не двудолен
                     } else if (color[v] == color[u]) {
-                        //если вершина v уже окрашена тем же цветом, что и u, граф не двудолен
                         return false;
                     }
                 }
@@ -70,9 +73,12 @@ bool Graph::isBipartite() {
     return true;
 }
 
+//функция для поиска увеличивающего пути в двудольном графе
 bool Graph::DFS(int16_t u, std::vector<bool>& visited, std::vector<int16_t>& match) {
+    //отмечаем вершину u как посещённую
     visited[u] = true;
 
+    //проверяем всех соседей вершины u
     for(int16_t v = 0; v < size; v++) {
         if(adjaencyMatrix[u][v] == 1) {
             if (match[v] == -1 || (!visited[match[v]] && DFS(match[v], visited, match))) {
@@ -86,12 +92,16 @@ bool Graph::DFS(int16_t u, std::vector<bool>& visited, std::vector<int16_t>& mat
     return false;
 }
 
+//функция для поиска максимального паросочетания в двудольном графе
 std::set<std::pair<int16_t, int16_t>> Graph::MaximumBipartiteMatching() {
+    //если граф не двудолен
     if(!isBipartite()) return {};
 
+    //массив для хранения текущего сопоставления (-1 - отсутствие сопоставления)
     std::vector<int16_t> match(size, -1);
     std::vector<bool> visited(size, false);
 
+    //для каждой вершины ищем увеличивающий путь
     for(int16_t u = 0; u < size; u++) {
         if(match[u] == -1) {
             std::fill(visited.begin(), visited.end(), false);
@@ -99,6 +109,7 @@ std::set<std::pair<int16_t, int16_t>> Graph::MaximumBipartiteMatching() {
         }
     }
 
+    //сохраняем рёбра максимального паросочетания
     std::set<std::pair<int16_t, int16_t>> matchingEdges;
     for(int16_t u = 0; u < size; u++) {
         if(u < match[u]) {

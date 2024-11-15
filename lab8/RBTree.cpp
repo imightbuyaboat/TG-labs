@@ -1,24 +1,28 @@
 #include "RBTree.h"
 
+//конструктор узла дерева
 Node::Node(int32_t data) {
     this->data = data;
     color = RED;
     left = right = parent = nullptr;
 }
 
+//конструктор дерева
 RBTree::RBTree() : root(nullptr) {};
 
+//деструктор дерева
 RBTree::~RBTree() {
     deleteNode(root);
 }
 
+//метод удаления узла из дерева
 void RBTree::deleteNode(Node* node) {
     if (node == nullptr) {
         return;
     }
-    deleteNode(node->left);    // Рекурсивно удаляем левое поддерево
-    deleteNode(node->right);   // Рекурсивно удаляем правое поддерево
-    delete node;               // Удаляем сам узел
+    deleteNode(node->left);    //рекурсивно удаляем левое поддерево
+    deleteNode(node->right);   //рекурсивно удаляем правое поддерево
+    delete node;               //удаляем сам узел
 }
 
 //функция инициализации дерева из файла
@@ -42,59 +46,74 @@ void RBTree::InitializeFromFile(const char* fileName) {
     file.close();
 }
 
+//функция получения цвета узла
 int RBTree::getColor(Node *&node) {
-    if (node == nullptr)
-        return BLACK;
-
-    return node->color;
+    //если текущий узел является листом, то возвращаем черный цвет
+    return (node == nullptr) ? BLACK : node->color;
 }
 
+//функция установки цвета узла
 void RBTree::setColor(Node *&node, int color) {
-    if (node == nullptr)
-        return;
-
-    node->color = color;
+    if (node != nullptr) {
+        node->color = color;
+    }
 }
 
-Node* RBTree::insertBST(Node *&root, Node *&ptr) {
+//функция вставки узла в поддерево
+Node* RBTree::insertNode(Node *&root, Node *&ptr) {
+    //если корень текущего поддерева пуст, то добавляем новый узел на его место
     if (root == nullptr)
         return ptr;
 
+    //добавляем узел в левое поддерево
     if (ptr->data < root->data) {
-        root->left = insertBST(root->left, ptr);
+        root->left = insertNode(root->left, ptr);
+        //устанавливаем родителя
         root->left->parent = root;
-    } else if (ptr->data > root->data) {
-        root->right = insertBST(root->right, ptr);
+    }
+    //добавляем узел в правое поддерево 
+    else if (ptr->data > root->data) {
+        root->right = insertNode(root->right, ptr);
+        //устанавливаем родителя
         root->right->parent = root;
     }
 
     return root;
 }
 
+//операция вставки элемента в дерево
 void RBTree::insertValue(int32_t n) {
     Node *node = new Node(n);
-    root = insertBST(root, node);
+    root = insertNode(root, node);
+
+    //исправляем балансировку дерева
     fixInsertRBTree(node);
 }
 
+//функция поворота узла влево
 void RBTree::rotateLeft(Node *&ptr) {
-    Node *right_child = ptr->right;
-    ptr->right = right_child->left;
+    Node *right_child = ptr->right; //правый потомок узла
+    ptr->right = right_child->left; //переносим левое поддерево правого потомка
 
+    //обновляем родителя для нового поддерева
     if (ptr->right != nullptr)
         ptr->right->parent = ptr;
 
+    //привязываем правого потомка к родителю узла
     right_child->parent = ptr->parent;
 
+    //если это корень дерева, обновляем его
     if (ptr->parent == nullptr)
         root = right_child;
+    //обновляем ссылку на левого потомка у родителя
     else if (ptr == ptr->parent->left)
         ptr->parent->left = right_child;
+    //обновляем ссылку на правого потомка у родителя
     else
         ptr->parent->right = right_child;
 
-    right_child->left = ptr;
-    ptr->parent = right_child;
+    right_child->left = ptr;    //переносим узел под правого потомка
+    ptr->parent = right_child;  //обновляем родителя для узла
 }
 
 void RBTree::rotateRight(Node *&ptr) {
@@ -117,31 +136,44 @@ void RBTree::rotateRight(Node *&ptr) {
     ptr->parent = left_child;
 }
 
+//функция исправления структуры дерева после вставки нового узла
 void RBTree::fixInsertRBTree(Node *&ptr) {
     Node *parent = nullptr;
     Node *grandparent = nullptr;
+
     while (ptr != root && getColor(ptr) == RED && getColor(ptr->parent) == RED) {
         parent = ptr->parent;
         grandparent = parent->parent;
+
+        //случай, если родитель является левым потомком
         if (parent == grandparent->left) {
             Node *uncle = grandparent->right;
+
+            //случай 1: дядя красный
             if (getColor(uncle) == RED) {
                 setColor(uncle, BLACK);
                 setColor(parent, BLACK);
                 setColor(grandparent, RED);
                 ptr = grandparent;
             } else {
+                //случай 2: узел — правый потомок
                 if (ptr == parent->right) {
                     rotateLeft(parent);
                     ptr = parent;
                     parent = ptr->parent;
                 }
+
+                //случай 3: узел — левый потомок
                 rotateRight(grandparent);
                 std::swap(parent->color, grandparent->color);
                 ptr = parent;
             }
-        } else {
+        }
+        //случай, если родитель является правым потомком 
+        else {
             Node *uncle = grandparent->left;
+
+            //аналогично для правой ветки
             if (getColor(uncle) == RED) {
                 setColor(uncle, BLACK);
                 setColor(parent, BLACK);
@@ -159,138 +191,12 @@ void RBTree::fixInsertRBTree(Node *&ptr) {
             }
         }
     }
+
+    //корень всегда черный
     setColor(root, BLACK);
 }
 
-void RBTree::fixDeleteRBTree(Node *&node) {
-    if (node == nullptr)
-        return;
-
-    if (node == root) {
-        root = nullptr;
-        return;
-    }
-
-    if (getColor(node) == RED || getColor(node->left) == RED || getColor(node->right) == RED) {
-        Node *child = node->left != nullptr ? node->left : node->right;
-
-        if (node == node->parent->left) {
-            node->parent->left = child;
-            if (child != nullptr)
-                child->parent = node->parent;
-            setColor(child, BLACK);
-            delete (node);
-        } else {
-            node->parent->right = child;
-            if (child != nullptr)
-                child->parent = node->parent;
-            setColor(child, BLACK);
-            delete (node);
-        }
-    } else {
-        Node *sibling = nullptr;
-        Node *parent = nullptr;
-        Node *ptr = node;
-        setColor(ptr, DOUBLE_BLACK);
-        while (ptr != root && getColor(ptr) == DOUBLE_BLACK) {
-            parent = ptr->parent;
-            if (ptr == parent->left) {
-                sibling = parent->right;
-                if (getColor(sibling) == RED) {
-                    setColor(sibling, BLACK);
-                    setColor(parent, RED);
-                    rotateLeft(parent);
-                } else {
-                    if (getColor(sibling->left) == BLACK && getColor(sibling->right) == BLACK) {
-                        setColor(sibling, RED);
-                        if(getColor(parent) == RED)
-                            setColor(parent, BLACK);
-                        else
-                            setColor(parent, DOUBLE_BLACK);
-                        ptr = parent;
-                    } else {
-                        if (getColor(sibling->right) == BLACK) {
-                            setColor(sibling->left, BLACK);
-                            setColor(sibling, RED);
-                            rotateRight(sibling);
-                            sibling = parent->right;
-                        }
-                        setColor(sibling, parent->color);
-                        setColor(parent, BLACK);
-                        setColor(sibling->right, BLACK);
-                        rotateLeft(parent);
-                        break;
-                    }
-                }
-            } else {
-                sibling = parent->left;
-                if (getColor(sibling) == RED) {
-                    setColor(sibling, BLACK);
-                    setColor(parent, RED);
-                    rotateRight(parent);
-                } else {
-                    if (getColor(sibling->left) == BLACK && getColor(sibling->right) == BLACK) {
-                        setColor(sibling, RED);
-                        if (getColor(parent) == RED)
-                            setColor(parent, BLACK);
-                        else
-                            setColor(parent, DOUBLE_BLACK);
-                        ptr = parent;
-                    } else {
-                        if (getColor(sibling->left) == BLACK) {
-                            setColor(sibling->right, BLACK);
-                            setColor(sibling, RED);
-                            rotateLeft(sibling);
-                            sibling = parent->left;
-                        }
-                        setColor(sibling, parent->color);
-                        setColor(parent, BLACK);
-                        setColor(sibling->left, BLACK);
-                        rotateRight(parent);
-                        break;
-                    }
-                }
-            }
-        }
-        if (node == node->parent->left)
-            node->parent->left = nullptr;
-        else
-            node->parent->right = nullptr;
-        delete(node);
-        setColor(root, BLACK);
-    }
-}
-
-Node *RBTree::minValueNode(Node *&node) {
-
-    Node *ptr = node;
-
-    while (ptr->left != nullptr)
-        ptr = ptr->left;
-
-    return ptr;
-}
-
-Node* RBTree::maxValueNode(Node *&node) {
-    Node *ptr = node;
-
-    while (ptr->right != nullptr)
-        ptr = ptr->right;
-
-    return ptr;
-}
-
-int RBTree::getBlackHeight(Node *node) {
-    int blackheight = 0;
-    while (node != nullptr) {
-        if (getColor(node) == BLACK)
-            blackheight++;
-        node = node->left;
-    }
-    return blackheight;
-}
-
-
+//функция поиска элемента в поддереве
 Node* RBTree::findValue(Node *node, int32_t data) {
     if (node == nullptr || node->data == data) {
         return node;
@@ -301,31 +207,39 @@ Node* RBTree::findValue(Node *node, int32_t data) {
     return findValue(node->right, data);
 }
 
-// Внешний метод, который запускает рекурсивный поиск от корня
+//операция посика элемента в дереве
 Node* RBTree::findValue(int32_t data) {
     return findValue(root, data);
 }
 
+//функция поиска 10 минимальных элементов в поддереве
 void RBTree::getSmallest10(Node *node, std::vector<int32_t> &smallest) {
-    if (node == nullptr || smallest.size() >= 10) {
-        return;
-    }
+    if(!node) return;
 
-    // Рекурсивно обходим левое поддерево
+    //обходим левое поддерево
     getSmallest10(node->left, smallest);
 
-    // Добавляем текущий узел, если вектор еще не заполнен
-    if (smallest.size() < 10) {
-        smallest.push_back(node->data);
+    //ищем индекс максимального элемента в массиве минимальных элементов
+    int32_t maxIndex = 0;
+    for(int32_t i = 1; i < 10; i++) {
+        if(smallest[i] > smallest[maxIndex]) {
+            maxIndex = i;
+        }
     }
 
-    // Рекурсивно обходим правое поддерево
+    //если текущее значение меньше максимального в массиве минимальных значений
+    if(node->data < smallest[maxIndex]) {
+        smallest[maxIndex] = node->data;
+    }
+
+    //обходим правое поддерево
     getSmallest10(node->right, smallest);
 }
 
+//операция поиска 10 минимальных элементов в дереве
 std::vector<int32_t> RBTree::getSmallest10() {
-    std::vector<int32_t> smallest;
+    std::vector<int32_t> smallest(10, INT32_MAX);
+
     getSmallest10(root, smallest);
-    
     return smallest;
 }
