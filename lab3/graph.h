@@ -33,7 +33,6 @@ public:
     std::list<Node> A(Node start, Node end, 
                     int16_t (*h)(int16_t, int16_t, int16_t, int16_t), 
                     bool isNeedToCheckDiagonally, size_t& visitedNodes);
-    std::pair<int16_t, int16_t> getSizes() { return {height, width}; }
 };
 
 int16_t euclideanHeuristic(int16_t x, int16_t y, int16_t xend, int16_t yend);

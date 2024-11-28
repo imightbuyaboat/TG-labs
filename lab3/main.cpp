@@ -4,7 +4,6 @@
 
 char* outputFileName = "default.txt";
 
-void writeResultToFile(std::ofstream& file, std::list<Node> path, size_t visitedNodes, const char* Heuristic, std::pair<int16_t, int16_t> sizes, std::chrono::duration<double> duration) {
     if(!path.empty()) {
         file << Heuristic << ":" << std::endl;
 
@@ -12,12 +11,10 @@ void writeResultToFile(std::ofstream& file, std::list<Node> path, size_t visited
         file << "Длина пути: " << end.g << std::endl;
 
         file << "Процент просмотренных клеток: " << 
-            100.0 * visitedNodes / (sizes.first * sizes.second) << "%" << std::endl;
 
         file << "Время выполнения: " << duration.count() << std::endl;
 
         for(const auto &node : path) {
-            file << "[" << node.x << ", " << node.y << "] ";
         }
         file << std::endl << std::endl;
     }
@@ -60,7 +57,6 @@ int main(int argc, char* argv[]) {
     }
 
     Graph graph(argv[1]);
-    auto sizes = graph.getSizes();
     size_t visitedNodes = 0;
 
     std::chrono::system_clock::time_point startTime, endTime;
